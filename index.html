@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Humanitarian Worker Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:      #1B4332;
+  --green-mid:  #2D6A4F;
+  --green-lt:   #52B788;
+  --green-pale: #D8F3DC;
+  --amber:      #E07B00;
+  --amber-lt:   #F4A261;
+  --cream:      #F2EEE5;
+  --paper:      #E8E3D8;
+  --border:     #D0CBC0;
+  --ink:        #1A1908;
+  --ink-mid:    #3D3C30;
+  --ink-lt:     #7A7860;
+  --tag-bg:     #EAF2ED;
+  --tag-txt:    #1B4332;
+  --shadow:     0 2px 12px rgba(27,67,50,0.10);
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Source Sans 3', sans-serif; background: var(--cream); color: var(--ink); font-size: 16px; line-height: 1.65; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* NAV */
+nav { position: fixed; top: 0; left: 0; right: 0; background: var(--green); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 60px; z-index: 100; box-shadow: 0 2px 16px rgba(0,0,0,0.25); }
+.nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.nav-diamond { width: 28px; height: 28px; background: var(--amber); transform: rotate(45deg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav-diamond span { transform: rotate(-45deg); font-weight: 700; font-size: 11px; color: #fff; }
+.nav-brand-wrap .game-title { font-weight: 700; font-size: 13px; letter-spacing: 1px; color: #fff; text-transform: uppercase; line-height: 1; }
+.nav-brand-wrap .ngo-name { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; display: block; }
+.nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+.nav-links a { color: rgba(255,255,255,0.75); text-decoration: none; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; transition: color 0.2s; }
+.nav-links a:hover { color: #fff; }
+.nav-cta { background: var(--amber); color: #fff !important; padding: 7px 16px; border-radius: 2px; transition: background 0.2s !important; }
+.nav-cta:hover { background: var(--amber-lt) !important; }
+
+/* HERO */
+#home { min-height: 100vh; background: var(--green); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 100px 40px 80px; position: relative; overflow: hidden; }
+#home::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 20% 30%, rgba(82,183,136,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(224,123,0,0.06) 0%, transparent 50%); pointer-events: none; }
+#home::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+.hero-tag { display: inline-block; background: rgba(224,123,0,0.2); border: 1px solid rgba(224,123,0,0.4); color: var(--amber-lt); font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; padding: 6px 16px; border-radius: 2px; margin-bottom: 28px; position: relative; z-index: 1; }
+.hero-ngo-badge { margin-bottom: 20px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.hero-diamond-sm { width: 30px; height: 30px; background: var(--amber); transform: rotate(45deg); display: flex; align-items: center; justify-content: center; opacity: 0.85; }
+.hero-diamond-sm span { transform: rotate(-45deg); font-weight: 900; font-size: 12px; color: #fff; }
+.hero-ngo-label { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 3px; text-transform: uppercase; }
+h1 { font-family: 'Libre Baskerville', serif; font-size: clamp(2.4rem, 5vw, 3.8rem); color: #fff; line-height: 1.15; max-width: 780px; margin: 0 auto 12px; position: relative; z-index: 1; }
+h1 em { font-style: italic; color: var(--amber-lt); }
+.hero-game-subtitle { font-size: 1.05rem; color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; position: relative; z-index: 1; font-weight: 600; }
+.hero-sub { font-size: 1.1rem; color: rgba(255,255,255,0.65); max-width: 560px; margin: 0 auto 48px; position: relative; z-index: 1; line-height: 1.7; }
+.hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+.btn-primary { background: var(--amber); color: #fff; padding: 16px 36px; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; border: none; cursor: pointer; border-radius: 2px; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(224,123,0,0.35); display: inline-block; }
+.btn-primary:hover { background: var(--amber-lt); transform: translateY(-2px); }
+.btn-secondary { background: transparent; color: rgba(255,255,255,0.85); padding: 15px 32px; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; border-radius: 2px; transition: all 0.2s; display: inline-block; }
+.btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.6); }
+.hero-scroll { position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%); z-index: 1; color: rgba(255,255,255,0.35); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.hero-scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, rgba(255,255,255,0.35), transparent); animation: scrollPulse 2s ease-in-out infinite; }
+@keyframes scrollPulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+
+/* SECTIONS */
+section { padding: 96px 40px; }
+.section-inner { max-width: 1060px; margin: 0 auto; }
+.section-label { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.section-label::before { content: ''; display: block; width: 24px; height: 2px; background: var(--amber); }
+h2 { font-family: 'Libre Baskerville', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1.2; color: var(--ink); margin-bottom: 16px; }
+.lead { font-size: 1.1rem; color: var(--ink-mid); max-width: 680px; line-height: 1.75; margin-bottom: 48px; }
+.divider { width: 48px; height: 3px; background: var(--amber); margin: 20px 0 40px; }
+
+/* ABOUT ARAN */
+#about-aran { background: #fff; border-top: 4px solid var(--green); }
+.aran-header { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
+.aran-logo-lg { display: flex; align-items: center; gap: 16px; }
+.diamond-md { width: 44px; height: 44px; background: var(--amber); transform: rotate(45deg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.diamond-md span { transform: rotate(-45deg); font-weight: 900; font-size: 18px; color: #fff; }
+.aran-logo-text .name { font-weight: 900; font-size: 26px; letter-spacing: 5px; color: var(--green); text-transform: uppercase; line-height: 1; }
+.aran-logo-text .full { font-size: 10px; color: var(--ink-lt); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+.fake-badge { margin-left: auto; background: #FFF3CD; border: 1px solid #F6C76A; color: #856404; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 6px 14px; border-radius: 2px; }
+.aran-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+.aran-mission-block { background: var(--green); color: #fff; padding: 36px; border-radius: 2px; position: relative; overflow: hidden; }
+.aran-mission-block::before { content: ''; position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: var(--amber); transform: rotate(45deg); opacity: 0.3; }
+.aran-mission-block .block-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 12px; }
+.aran-mission-block h3 { font-family: 'Libre Baskerville', serif; font-size: 1.3rem; color: #fff; margin-bottom: 16px; font-style: italic; }
+.aran-mission-block p { font-size: 0.95rem; color: rgba(255,255,255,0.8); line-height: 1.7; }
+.aran-why-fake { background: #FFFBF0; border: 1px solid #F6E4A0; border-left: 4px solid var(--amber); padding: 32px; border-radius: 0 2px 2px 0; }
+.aran-why-fake h3 { font-family: 'Libre Baskerville', serif; font-size: 1.2rem; color: var(--ink); margin-bottom: 12px; }
+.aran-why-fake p { font-size: 0.95rem; color: var(--ink-mid); line-height: 1.7; margin-bottom: 12px; }
+.aran-why-fake p:last-child { margin-bottom: 0; }
+.values-list { list-style: none; margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.values-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; color: var(--ink-mid); }
+.values-list li::before { content: '◆'; color: var(--amber); font-size: 8px; margin-top: 6px; flex-shrink: 0; }
+.ops-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 48px; border-radius: 2px; overflow: hidden; }
+.ops-cell { background: #fff; padding: 20px 16px; text-align: center; }
+.ops-icon { font-size: 24px; margin-bottom: 8px; }
+.ops-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
+.ops-detail { font-size: 12px; color: var(--ink-lt); }
+
+/* ABOUT GAME */
+#about-game { background: var(--cream); }
+.game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+.feature-card { background: #fff; border: 1px solid var(--border); padding: 28px; border-radius: 2px; margin-bottom: 16px; border-left: 3px solid var(--green); transition: box-shadow 0.2s; }
+.feature-card:hover { box-shadow: var(--shadow); }
+.feature-card h4 { font-family: 'Libre Baskerville', serif; font-size: 1.05rem; color: var(--green); margin-bottom: 8px; }
+.feature-card p { font-size: 0.9rem; color: var(--ink-mid); line-height: 1.65; }
+.game-meta { background: var(--green); color: #fff; padding: 36px; border-radius: 2px; }
+.game-meta .meta-title { font-family: 'Libre Baskerville', serif; font-size: 1.3rem; color: #fff; margin-bottom: 24px; font-style: italic; }
+.meta-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 13px; }
+.meta-row:last-child { border-bottom: none; }
+.meta-key { color: rgba(255,255,255,0.55); font-weight: 600; }
+.meta-val { color: #fff; font-weight: 700; text-align: right; }
+.quote-block { background: var(--green-pale); border-left: 4px solid var(--green); padding: 24px 28px; margin-top: 24px; border-radius: 0 2px 2px 0; }
+.quote-block blockquote { font-family: 'Libre Baskerville', serif; font-style: italic; font-size: 1.0rem; color: var(--green); line-height: 1.7; margin-bottom: 10px; }
+.quote-attribution { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--green-mid); }
+
+/* ROADMAP */
+#roadmap { background: #fff; }
+.roadmap-timeline { position: relative; margin-top: 16px; }
+.roadmap-timeline::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+.rm-item { display: flex; gap: 28px; margin-bottom: 40px; position: relative; }
+.rm-item:last-child { margin-bottom: 0; }
+.rm-marker { flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; position: relative; z-index: 1; border: 3px solid #fff; }
+.rm-done { background: var(--green); box-shadow: 0 0 0 2px var(--green); }
+.rm-active { background: var(--amber); box-shadow: 0 0 0 2px var(--amber); animation: pulse 2s ease-in-out infinite; }
+.rm-soon { background: var(--paper); box-shadow: 0 0 0 2px var(--border); }
+.rm-future { background: var(--paper); box-shadow: 0 0 0 2px var(--border); opacity: 0.6; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 2px var(--amber); } 50% { box-shadow: 0 0 0 6px rgba(224,123,0,0.2); } }
+.rm-content { flex: 1; padding-top: 10px; }
+.rm-phase { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-lt); margin-bottom: 4px; }
+.rm-title { font-family: 'Libre Baskerville', serif; font-size: 1.15rem; color: var(--ink); margin-bottom: 8px; }
+.rm-desc { font-size: 0.9rem; color: var(--ink-mid); line-height: 1.65; margin-bottom: 12px; }
+.rm-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.rm-tag { background: var(--cream); border: 1px solid var(--border); color: var(--ink-mid); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.rm-tag.done { background: var(--green-pale); border-color: var(--green-lt); color: var(--green); }
+.rm-tag.active { background: #FFF3CD; border-color: #F6C76A; color: #856404; }
+.rm-status-label { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; margin-bottom: 8px; }
+.sl-done { background: var(--green-pale); color: var(--green); }
+.sl-active { background: #FFF3CD; color: #856404; }
+.sl-soon { background: var(--cream); color: var(--ink-lt); }
+.sl-future { background: var(--paper); color: var(--ink-lt); }
+
+/* SOURCES */
+#sources { background: var(--cream); }
+.sources-intro-note { background: var(--green-pale); border-left: 4px solid var(--green); padding: 16px 20px; border-radius: 0 4px 4px 0; font-size: 0.9rem; color: var(--green); margin-bottom: 36px; line-height: 1.65; }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 36px; align-items: center; }
+.filter-bar-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-lt); margin-right: 4px; }
+.filter-btn { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-family: 'Source Sans 3', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--ink-mid); transition: all 0.15s; }
+.filter-btn:hover, .filter-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+.sources-section-header { display: flex; align-items: baseline; gap: 12px; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--green); }
+.sources-section-header h3 { font-size: 13px; font-weight: 700; color: var(--green); letter-spacing: 2px; text-transform: uppercase; }
+.src-count { font-size: 12px; color: var(--ink-lt); }
+.source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.source-card { background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; transition: box-shadow 0.2s; }
+.source-card:hover { box-shadow: var(--shadow); }
+.source-card.hidden { display: none; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.org-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--amber); flex-shrink: 0; }
+.lang-badge { font-size: 10px; color: var(--ink-lt); background: var(--paper); border-radius: 3px; padding: 1px 7px; flex-shrink: 0; }
+.source-card h4 { font-size: 0.92rem; font-weight: 700; line-height: 1.35; color: var(--ink); }
+.src-meta { font-size: 11px; color: var(--ink-lt); }
+.src-description { font-size: 0.85rem; color: #333; line-height: 1.55; }
+.src-game-use { font-size: 0.82rem; color: var(--green-mid); font-style: italic; padding-top: 6px; border-top: 1px dashed var(--border); }
+.src-game-use::before { content: '🎮 '; font-style: normal; }
+.src-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.src-tag { font-size: 10px; background: var(--tag-bg); color: var(--tag-txt); padding: 2px 8px; border-radius: 3px; font-weight: 600; }
+.card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.source-link { font-size: 11px; color: var(--green-lt); text-decoration: none; word-break: break-all; }
+.source-link:hover { text-decoration: underline; }
+.access-badge { font-size: 10px; padding: 2px 8px; border-radius: 3px; flex-shrink: 0; font-weight: 600; }
+.access-free { background: #d4edda; color: #155724; }
+.access-partial { background: #fff3cd; color: #856404; }
+
+/* ABOUT ME */
+#about-me { background: #fff; }
+.about-me-card { background: #fff; border: 1px solid var(--border); display: grid; grid-template-columns: 260px 1fr; min-height: 320px; border-radius: 2px; overflow: hidden; }
+.about-me-left { background: var(--green); padding: 40px 32px; display: flex; flex-direction: column; justify-content: space-between; }
+.avatar-placeholder { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 20px; }
+.about-me-left .name { font-family: 'Libre Baskerville', serif; font-size: 1.3rem; color: #fff; margin-bottom: 4px; }
+.about-me-left .role { font-size: 11px; color: rgba(255,255,255,0.55); letter-spacing: 1.5px; text-transform: uppercase; }
+.experience-badges { margin-top: 28px; display: flex; flex-direction: column; gap: 8px; }
+.exp-badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); padding: 8px 12px; border-radius: 2px; font-size: 12px; color: rgba(255,255,255,0.8); font-weight: 600; }
+.exp-badge strong { display: block; color: #fff; font-size: 14px; }
+.about-me-right { padding: 40px 44px; }
+.about-me-right h3 { font-family: 'Libre Baskerville', serif; font-size: 1.4rem; color: var(--ink); margin-bottom: 20px; }
+.about-me-right p { font-size: 0.98rem; color: var(--ink-mid); line-height: 1.75; margin-bottom: 16px; }
+.about-me-right p:last-child { margin-bottom: 0; }
+
+/* DESIGN DOCS */
+#design-docs { background: #fff; }
+.docs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.doc-card { border: 1px solid var(--border); border-radius: 2px; padding: 24px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow 0.2s, border-color 0.2s; text-decoration: none; color: inherit; background: var(--cream); }
+.doc-card:hover { box-shadow: var(--shadow); border-color: var(--green-lt); }
+.doc-card.featured { background: var(--green); border-color: var(--green); }
+.doc-card.featured .doc-type { color: rgba(255,255,255,0.5); }
+.doc-card.featured .doc-title { color: #fff; }
+.doc-card.featured .doc-desc { color: rgba(255,255,255,0.7); }
+.doc-icon { font-size: 24px; }
+.doc-type { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); }
+.doc-title { font-family: 'Libre Baskerville', serif; font-size: 1rem; color: var(--ink); line-height: 1.3; }
+.doc-desc { font-size: 0.82rem; color: var(--ink-mid); line-height: 1.6; flex: 1; }
+.doc-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.doc-tag { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+.doc-tag-html { background: var(--green-pale); color: var(--green); }
+.doc-tag-docx { background: #DBEAFE; color: #1E40AF; }
+.doc-tag-coming { background: var(--paper); color: var(--ink-lt); }
+@media (max-width: 900px) { .docs-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .docs-grid { grid-template-columns: 1fr; } }
+
+/* PLAY */
+#play { background: var(--green); text-align: center; }
+#play h2 { color: #fff; }
+#play .lead { color: rgba(255,255,255,0.65); margin-left: auto; margin-right: auto; }
+#play .section-label { justify-content: center; }
+#play .section-label::before { display: none; }
+.coming-soon-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 60px 40px; max-width: 580px; margin: 0 auto; position: relative; overflow: hidden; }
+.coming-soon-card::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 40px 40px; }
+.cs-icon { font-size: 48px; margin-bottom: 20px; }
+.cs-title { font-family: 'Libre Baskerville', serif; font-size: 1.8rem; color: #fff; margin-bottom: 12px; position: relative; }
+.cs-sub { font-size: 0.95rem; color: rgba(255,255,255,0.6); line-height: 1.7; margin-bottom: 32px; position: relative; }
+.cs-progress { max-width: 360px; margin: 0 auto 32px; position: relative; }
+.cs-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.cs-progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.cs-progress-fill { height: 100%; background: linear-gradient(90deg, var(--green-lt), var(--amber)); border-radius: 3px; width: 60%; animation: progAnim 3s ease-in-out infinite alternate; }
+@keyframes progAnim { from { width: 55%; } to { width: 65%; } }
+.notify-form { display: flex; max-width: 380px; margin: 0 auto; }
+.notify-form input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); border-right: none; color: #fff; padding: 12px 18px; font-family: 'Source Sans 3', sans-serif; font-size: 14px; border-radius: 2px 0 0 2px; outline: none; }
+.notify-form input::placeholder { color: rgba(255,255,255,0.35); }
+.notify-form button { background: var(--amber); color: #fff; border: none; cursor: pointer; padding: 12px 22px; font-family: 'Source Sans 3', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; border-radius: 0 2px 2px 0; transition: background 0.2s; }
+.notify-form button:hover { background: var(--amber-lt); }
+
+/* DONATE */
+#donate { background: var(--cream); text-align: center; }
+.donate-disclaimer { display: inline-flex; align-items: center; gap: 8px; background: #FFF3CD; border: 1px solid #F6C76A; color: #856404; font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 2px; margin-bottom: 40px; }
+.donate-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 48px; }
+.donate-tier { border: 1px solid var(--border); background: #fff; border-radius: 2px; padding: 32px 24px; transition: box-shadow 0.2s, border-color 0.2s; text-decoration: none; display: block; color: inherit; position: relative; }
+.donate-tier:hover { box-shadow: var(--shadow); border-color: var(--green-lt); }
+.donate-tier.featured { border: 2px solid var(--amber); }
+.featured-label { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--amber); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; border-radius: 2px; white-space: nowrap; }
+.tier-icon { font-size: 28px; margin-bottom: 12px; }
+.tier-title { font-family: 'Libre Baskerville', serif; font-size: 1rem; color: var(--ink); margin-bottom: 4px; }
+.tier-amount { font-family: 'IBM Plex Mono', monospace; font-size: 1.6rem; font-weight: 700; color: var(--green); margin-bottom: 12px; }
+.tier-desc { font-size: 13px; color: var(--ink-lt); line-height: 1.5; }
+.donate-main-btn { background: var(--amber); color: #fff; padding: 18px 52px; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; border: none; cursor: pointer; border-radius: 2px; display: inline-block; box-shadow: 0 4px 20px rgba(224,123,0,0.3); transition: all 0.2s; }
+.donate-main-btn:hover { background: var(--amber-lt); transform: translateY(-2px); }
+.donate-note { margin-top: 20px; font-size: 13px; color: var(--ink-lt); }
+
+/* FOOTER */
+footer { background: var(--ink); color: rgba(255,255,255,0.5); padding: 40px; }
+.footer-inner { max-width: 1060px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.footer-brand { display: flex; align-items: center; gap: 10px; }
+.footer-diamond { width: 22px; height: 22px; background: var(--amber); opacity: 0.7; transform: rotate(45deg); display: flex; align-items: center; justify-content: center; }
+.footer-diamond span { transform: rotate(-45deg); font-weight: 900; font-size: 9px; color: #fff; }
+.footer-name { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+.footer-links { display: flex; gap: 20px; list-style: none; flex-wrap: wrap; }
+.footer-links a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 12px; transition: color 0.2s; }
+.footer-links a:hover { color: rgba(255,255,255,0.8); }
+.footer-copy { font-size: 11px; color: rgba(255,255,255,0.25); }
+
+@media (max-width: 900px) {
+  nav { padding: 0 20px; }
+  .nav-links li:nth-child(-n+3) { display: none; }
+  section { padding: 64px 24px; }
+  .aran-grid, .game-grid, .about-me-card { grid-template-columns: 1fr; }
+  .donate-grid { grid-template-columns: 1fr; }
+  .ops-strip { grid-template-columns: 1fr 1fr; }
+  .values-list { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#home" class="nav-logo">
+    <div class="nav-diamond"><span>A</span></div>
+    <div class="nav-brand-wrap">
+      <span class="game-title">Humanitarian Worker Simulator</span>
+      <span class="ngo-name">Playing for ARAN · Aid &amp; Relief Action Network</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about-aran">ARAN</a></li>
+    <li><a href="#about-game">The Game</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#sources">Sources</a></li>
+    <li><a href="#design-docs">Docs</a></li>
+    <li><a href="#about-me">Author</a></li>
+    <li><a href="#play">Play</a></li>
+    <li><a href="#donate" class="nav-cta">Donate</a></li>
+  </ul>
+</nav>
+
+<section id="home">
+  <div class="hero-tag">Independent Game Project · 2025</div>
+  <div class="hero-ngo-badge">
+    <div class="hero-diamond-sm"><span>A</span></div>
+    <span class="hero-ngo-label">Playing for ARAN — Aid &amp; Relief Action Network</span>
+  </div>
+  <h1>What does it actually take to run a <em>humanitarian mission</em>?</h1>
+  <p class="hero-game-subtitle">Humanitarian Worker Simulator</p>
+  <p class="hero-sub">A management simulation game built on four years of MSF field experience. Navigate logistics, security, and access negotiation in crisis zones — where the right decision is never obvious.</p>
+  <div class="hero-actions">
+    <a href="#play" class="btn-primary">▶ Play the Game</a>
+    <a href="#about-game" class="btn-secondary">Learn More</a>
+  </div>
+  <div class="hero-scroll"><span>Scroll</span><div class="hero-scroll-line"></div></div>
+</section>
+
+<section id="about-aran">
+  <div class="section-inner">
+    <div class="section-label">The Organisation</div>
+    <div class="aran-header">
+      <div class="aran-logo-lg">
+        <div class="diamond-md"><span>A</span></div>
+        <div class="aran-logo-text"><div class="name">ARAN</div><div class="full">Aid &amp; Relief Action Network</div></div>
+      </div>
+      <div class="fake-badge">⚠ Fictional Organisation</div>
+    </div>
+    <div class="aran-grid">
+      <div>
+        <h2>A fictional NGO, built to be real.</h2>
+        <div class="divider"></div>
+        <p class="lead" style="margin-bottom:24px;">In Humanitarian Worker Simulator, you play as a Field Coordinator working for ARAN — Aid &amp; Relief Action Network. ARAN does not exist. But everything about it was designed to be indistinguishable from the real thing.</p>
+        <div class="aran-mission-block">
+          <div class="block-label">Mission Statement</div>
+          <h3>"Wherever access is most difficult, ARAN goes first."</h3>
+          <p>ARAN delivers emergency medical care, water &amp; sanitation services, and logistical support in conflict-affected and disaster-stricken areas. Our independence from political and military actors is the foundation of everything we do.</p>
+        </div>
+      </div>
+      <div>
+        <div class="aran-why-fake">
+          <h3>Why is ARAN fictional?</h3>
+          <p>Using a real organisation — MSF, ICRC, IRC — would carry the risk of misrepresenting their actual doctrine, decisions, or operational principles, even unintentionally.</p>
+          <p>ARAN was created to give the game full creative and educational freedom: to explore difficult dilemmas, including situations where the "right" answer costs lives, without implying that any real organisation made those choices.</p>
+          <p>The scenarios, however, are drawn directly from real field experience. The complexity is real. The tension is real. Only the logo is invented.</p>
+        </div>
+        <ul class="values-list">
+          <li>Humanitarian principles: humanity, neutrality, impartiality, independence</li>
+          <li>Community acceptance as primary security strategy</li>
+          <li>Staff wellbeing as operational necessity</li>
+          <li>Transparent reporting to donors and partners</li>
+          <li>Do No Harm as the irreducible baseline</li>
+          <li>Field-driven decision-making over HQ directives</li>
+        </ul>
+      </div>
+    </div>
+    <div class="ops-strip">
+      <div class="ops-cell"><div class="ops-icon">🚛</div><div class="ops-label">Fleet &amp; Logistics</div><div class="ops-detail">Vehicle management, fuel, road security</div></div>
+      <div class="ops-cell"><div class="ops-icon">💧</div><div class="ops-label">WASH</div><div class="ops-detail">Water, sanitation, chlorination</div></div>
+      <div class="ops-cell"><div class="ops-icon">🏥</div><div class="ops-label">Medical Ops</div><div class="ops-detail">Supply chain, treatment tiers, capacity</div></div>
+      <div class="ops-cell"><div class="ops-icon">🤝</div><div class="ops-label">Access &amp; Security</div><div class="ops-detail">Acceptance, negotiation, movement rules</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="about-game">
+  <div class="section-inner">
+    <div class="section-label">The Simulation</div>
+    <div class="game-grid">
+      <div>
+        <h2>The side of humanitarian work nobody talks about.</h2>
+        <div class="divider"></div>
+        <p style="color:var(--ink-mid);line-height:1.75;margin-bottom:32px;">Humanitarian Worker Simulator puts you in the seat of an ARAN Field Coordinator. Every day brings decisions with no clean answers — because that is what the field is actually like.</p>
+        <div class="feature-card"><h4>Fleet &amp; Logistics Management</h4><p>Every patient reached depends on a vehicle that moves. Manage maintenance schedules, fuel reserves, and movement authorisations — in a context where roads are not safe after dark.</p></div>
+        <div class="feature-card"><h4>Security &amp; Access Negotiation</h4><p>Armed groups control territory. Your ability to operate depends on being trusted, not on having guards. Acceptance is your security strategy — and it can be lost in a single bad decision.</p></div>
+        <div class="feature-card"><h4>Team &amp; Staff Wellbeing</h4><p>Burnout is an operational risk. Fatigue causes errors. Errors escalate. The simulation tracks your team's morale — because a team that falls apart cannot run a mission.</p></div>
+        <div class="quote-block">
+          <blockquote>"Stressed-out colleagues are a security risk to themselves and to others."</blockquote>
+          <div class="quote-attribution">Staying Alive — ICRC Security Manual, David Lloyd Roberts</div>
+        </div>
+      </div>
+      <div>
+        <div class="game-meta">
+          <div class="meta-title">Game Specifications</div>
+          <div class="meta-row"><span class="meta-key">Title</span><span class="meta-val">Humanitarian Worker Simulator</span></div>
+          <div class="meta-row"><span class="meta-key">NGO (fictional)</span><span class="meta-val">ARAN</span></div>
+          <div class="meta-row"><span class="meta-key">Genre</span><span class="meta-val">Management Simulator</span></div>
+          <div class="meta-row"><span class="meta-key">Platform</span><span class="meta-val">Browser · Android (planned)</span></div>
+          <div class="meta-row"><span class="meta-key">Status</span><span class="meta-val">In Development (v4)</span></div>
+          <div class="meta-row"><span class="meta-key">Setting</span><span class="meta-val">Active conflict zone · DRC</span></div>
+          <div class="meta-row"><span class="meta-key">Play session</span><span class="meta-val">30–60 min</span></div>
+          <div class="meta-row"><span class="meta-key">Based on</span><span class="meta-val">4 years MSF field experience</span></div>
+          <div class="meta-row"><span class="meta-key">References</span><span class="meta-val">25 field documents</span></div>
+          <div class="meta-row"><span class="meta-key">Price</span><span class="meta-val">Free to play</span></div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);padding:28px;margin-top:24px;border-radius:2px;">
+          <h4 style="font-family:'Libre Baskerville',serif;font-size:1.05rem;color:var(--ink);margin-bottom:16px;">The educational intent</h4>
+          <p style="font-size:0.9rem;color:var(--ink-mid);line-height:1.7;margin-bottom:12px;">Most games about humanitarian crises put the player at the centre of rescue operations — hero narratives that flatten the complexity of the real work.</p>
+          <p style="font-size:0.9rem;color:var(--ink-mid);line-height:1.7;">This game shows the management layer: the decisions made before anyone reaches a patient, the compromises that keep operations running, and the weight of responsibility carried by field coordinators.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="section-inner">
+    <div class="section-label">Development Roadmap</div>
+    <h2>Where we are. Where we're going.</h2>
+    <div class="divider"></div>
+    <p class="lead">The simulator is built iteratively — each version tested against real operational logic before the next layer is added. Two parallel tracks: a browser/PWA version available now, and a full Unity release in development.</p>
+
+    <div class="roadmap-timeline">
+
+      <!-- PHASE 1 -->
+      <div class="rm-item">
+        <div class="rm-marker rm-done">✓</div>
+        <div class="rm-content">
+          <div class="rm-status-label sl-done">Completed · v1–v3</div>
+          <div class="rm-phase">Phase 1 · Foundation</div>
+          <div class="rm-title">Core Gameplay Loop, ARAN Identity &amp; Interface Redesign</div>
+          <div class="rm-desc">Built the base management loop from scratch: daily decision cycles, KPI tracking (budget, morale, security, supply, WASH), and a first library of field events drawn directly from MSF operational experience. Created the ARAN fictional NGO identity — forest green and amber brand system, diamond logo, vehicle livery. Rebuilt the interface on a Game Dev Tycoon-inspired single-screen layout with persistent sidebar, interactive map, and event panel. Added a guided tutorial narrated by a fictional field coordinator.</div>
+          <div class="rm-tags">
+            <span class="rm-tag done">Event system</span>
+            <span class="rm-tag done">KPI engine</span>
+            <span class="rm-tag done">ARAN brand</span>
+            <span class="rm-tag done">Single-screen layout</span>
+            <span class="rm-tag done">Tutorial layer</span>
+            <span class="rm-tag done">Visual feedback</span>
+            <span class="rm-tag done">Outcome cards</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 2 -->
+      <div class="rm-item">
+        <div class="rm-marker rm-done">✓</div>
+        <div class="rm-content">
+          <div class="rm-status-label sl-done">Completed · v5</div>
+          <div class="rm-phase">Phase 2 · Architecture Rebuild</div>
+          <div class="rm-title">6-Month Mission Structure, 13 Positions &amp; Deep Mechanics</div>
+          <div class="rm-desc">Complete architectural rebuild. Shifted from a 21-day loop to a 6-month mission (26 weekly turns) with progressive difficulty and a discovery arc — the player's operational picture fills in over the first three months, just as in a real field deployment. Added all 13 authentic humanitarian positions (FieldCo, Log, PMR, MAM, NAM, MWAM, MHAM, Biomed, EHM/Watsan, Supply, Fin, HR, HP) with correct org charts and dual superior chains. Introduced a 3-outcome decision system (immediate / medium-term / long-term consequences visible before confirming), dice-roll randomness, and an end-of-mission debrief timeline showing every choice made across 26 weeks. Added localStorage save state and live performance grading.</div>
+          <div class="rm-tags">
+            <span class="rm-tag done">26-week mission</span>
+            <span class="rm-tag done">13 positions</span>
+            <span class="rm-tag done">3-outcome decisions</span>
+            <span class="rm-tag done">Dice roll system</span>
+            <span class="rm-tag done">Discovery arc</span>
+            <span class="rm-tag done">Dual superior chain</span>
+            <span class="rm-tag done">Mission debrief</span>
+            <span class="rm-tag done">Save state</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 3 -->
+      <div class="rm-item">
+        <div class="rm-marker rm-done">✓</div>
+        <div class="rm-content">
+          <div class="rm-status-label sl-done">Completed</div>
+          <div class="rm-phase">Phase 3 · Research &amp; Publication</div>
+          <div class="rm-title">25-Source Reference Library &amp; Website Launch</div>
+          <div class="rm-desc">Conducted systematic research across five domains — fleet &amp; logistics, security &amp; access, WASH &amp; epidemics, DRC field context, humanitarian law — to ground every game mechanic in a real published source. Produced a complete, filterable sources page (25 documents, ICRC to ACAPS) showing which mechanic each source grounds. Built and launched this website with all sections: ARAN presentation, game description, roadmap, sources, author bio, play access, and donation.</div>
+          <div class="rm-tags">
+            <span class="rm-tag done">25 field sources</span>
+            <span class="rm-tag done">Sources page</span>
+            <span class="rm-tag done">Website live</span>
+            <span class="rm-tag done">Devlog</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 4 -->
+      <div class="rm-item">
+        <div class="rm-marker rm-active">▶</div>
+        <div class="rm-content">
+          <div class="rm-status-label sl-active">In Progress</div>
+          <div class="rm-phase">Phase 4 · Two-Track Release</div>
+          <div class="rm-title">PWA Lite Release + Unity Migration Begins</div>
+          <div class="rm-desc">Two things happening in parallel. First: package the current HTML v5 as a Progressive Web App — offline-capable, installable on Android and desktop without an app store, suitable for field use with no internet. Connect the website email notification form. Run the first round of external playtesting with real humanitarian workers. Second: begin the Unity/C# migration. The core architecture (GameState, GameEngine, EventSystem, LocalisationManager, SaveSystem) has been scaffolded. The first scenario (Nord-Kivu) and first event set are being written as JSON data files to feed the Unity engine.</div>
+          <div class="rm-tags">
+            <span class="rm-tag active">PWA packaging</span>
+            <span class="rm-tag active">Offline mode</span>
+            <span class="rm-tag active">External playtesting</span>
+            <span class="rm-tag active">Unity C# scaffold</span>
+            <span class="rm-tag active">JSON data files</span>
+            <span class="rm-tag active">Nord-Kivu scenario</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 5 -->
+      <div class="rm-item">
+        <div class="rm-marker rm-soon">◌</div>
+        <div class="rm-content">
+          <div class="rm-status-label sl-soon">Planned</div>
+          <div class="rm-phase">Phase 5 · Unity Alpha &amp; Content Expansion</div>
+          <div class="rm-title">Full Unity Build, Graphics Layer &amp; Expanded Scenario Library</div>
+          <div class="rm-desc">Complete the Unity migration with a graphics layer — moving beyond the browser prototype to a proper visual environment with ARAN-branded assets, vehicle illustrations, and map overlays. Expand the scenario library beyond Nord-Kivu to additional crisis contexts. Build out all 13 positions with full event sets and unique mechanics per role. Add French and Arabic localisation. Internal alpha with a closed group of humanitarian professionals for structured feedback.</div>
+          <div class="rm-tags">
+            <span class="rm-tag">Unity alpha</span>
+            <span class="rm-tag">Graphics layer</span>
+            <span class="rm-tag">All 13 positions</span>
+            <span class="rm-tag">Multiple scenarios</span>
+            <span class="rm-tag">FR / AR localisation</span>
+            <span class="rm-tag">Field alpha test</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHASE 6 -->
+      <div class="rm-item">
+        <div class="rm-marker rm-future">○</div>
+        <div class="rm-content">
+          <div class="rm-status-label sl-future">Future</div>
+          <div class="rm-phase">Phase 6 · Android &amp; Educational Outreach</div>
+          <div class="rm-title">Android / PC Release &amp; Educational Pack</div>
+          <div class="rm-desc">Release the Unity build on Android (Google Play) and PC. Develop an educational companion pack for use in university courses, NGO onboarding programs, and humanitarian training curricula. Reach out to the serious games community (itch.io), humanitarian networks, and academic institutions. Explore a cause-driven funding model where a portion of any revenue supports real field organisations.</div>
+          <div class="rm-tags">
+            <span class="rm-tag">Android release</span>
+            <span class="rm-tag">PC release</span>
+            <span class="rm-tag">Educational guide</span>
+            <span class="rm-tag">itch.io</span>
+            <span class="rm-tag">NGO partnerships</span>
+            <span class="rm-tag">Cause-driven model</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="sources">
+  <div class="section-inner">
+    <div class="section-label">Documentation</div>
+    <h2>Sources &amp; References</h2>
+    <div class="divider"></div>
+    <p class="lead">Every mechanic, event, and threshold in the game is grounded in real field guidance, operational reports, and sector standards. 25 sources across 5 categories.</p>
+    <div class="sources-intro-note">This simulator was built by a former MSF field worker. The sources below are the same documents consulted during four years of operations — most are freely available to the public. They range from technical handbooks used daily in the field, to operational reports describing real incidents that inspired in-game events.</div>
+
+    <div class="filter-bar">
+      <span class="filter-bar-label">Filter:</span>
+      <button class="filter-btn active" onclick="filterSources('all',this)">All</button>
+      <button class="filter-btn" onclick="filterSources('fleet',this)">Fleet &amp; Logistics</button>
+      <button class="filter-btn" onclick="filterSources('security',this)">Security &amp; Access</button>
+      <button class="filter-btn" onclick="filterSources('wash',this)">WASH &amp; Epidemics</button>
+      <button class="filter-btn" onclick="filterSources('drc',this)">DRC / Field Context</button>
+      <button class="filter-btn" onclick="filterSources('standards',this)">Standards</button>
+      <button class="filter-btn" onclick="filterSources('french',this)">Français</button>
+    </div>
+
+    <div class="sources-section-header" data-section="fleet"><h3>Fleet &amp; Logistics</h3><span class="src-count">6 sources</span></div>
+    <div class="source-grid">
+      <div class="source-card" data-cat="fleet"><div class="card-top"><span class="org-badge">Fleet Forum</span><span class="lang-badge">EN</span></div><h4>Occupational Road and Fleet Safety Guide (2019)</h4><div class="src-meta">Fleet Forum · 2019 · Guide</div><p class="src-description">The sector reference for road safety in humanitarian organisations. Covers light vehicles, motorcycles and mixed fleets. Winner of the Prince Michael of Kent International Road Safety Award.</p><p class="src-game-use">Basis for driver incident events, vehicle safety checks, and the stat "time on the road is the most dangerous part of a humanitarian worker's job."</p><div class="src-tags"><span class="src-tag">Fleet</span><span class="src-tag">Road Safety</span><span class="src-tag">Standards</span></div><div class="card-footer"><a href="https://knowledge.fleetforum.org/knowledge-base/article/occupational-road-and-fleet-safety-guide" class="source-link" target="_blank">knowledge.fleetforum.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="fleet"><div class="card-top"><span class="org-badge">Fleet Forum / INSEAD</span><span class="lang-badge">EN</span></div><h4>Rethinking Humanitarian Vehicle Management (2006)</h4><div class="src-meta">Van Wassenhove, Tomasini, Khaw · INSEAD · 2006 · Case Study</div><p class="src-description">Fleet management is the second largest cost in the humanitarian sector after staffing. Examines how the Fleet Forum was founded to address fragmentation and inefficiency in NGO transport.</p><p class="src-game-use">Justification for the budget pressure mechanics and the vehicle cost model.</p><div class="src-tags"><span class="src-tag">Fleet</span><span class="src-tag">Budget</span><span class="src-tag">Sector Context</span></div><div class="card-footer"><a href="https://publishing.insead.edu/case/fleet-forum-rethinking-humanitarian-vehicle-management" class="source-link" target="_blank">publishing.insead.edu</a><span class="access-badge access-partial">Partial</span></div></div>
+      <div class="source-card" data-cat="fleet"><div class="card-top"><span class="org-badge">UNHCR</span><span class="lang-badge">EN</span></div><h4>Evaluation of UNHCR's Global Fleet Management (2018)</h4><div class="src-meta">UNHCR · 2018 · Evaluation Report</div><p class="src-description">Full evaluation of UNHCR's centralised fleet model. Covers vehicle lifecycle policy (5 years / 150,000 km), GPS tracking, insurance schemes, and cost efficiency data across five country operations.</p><p class="src-game-use">Vehicle lifecycle/disposal mechanic and the "aging fleet" risk event.</p><div class="src-tags"><span class="src-tag">Fleet</span><span class="src-tag">UNHCR</span><span class="src-tag">Cost Data</span></div><div class="card-footer"><a href="https://www.unhcr.org/5c4f26f7fc.pdf" class="source-link" target="_blank">unhcr.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="fleet"><div class="card-top"><span class="org-badge">INSEAD / UNHCR</span><span class="lang-badge">EN</span></div><h4>Field Vehicle Fleet Management in Humanitarian Operations (2011)</h4><div class="src-meta">Martinez et al. · Journal of Operations Management · 2011 · Research</div><p class="src-description">Academic study developing a fleet-sizing model for humanitarian operations. Transportation is the second largest overhead cost after personnel.</p><p class="src-game-use">Fleet sizing logic and the relationship between programme footprint and vehicle demand.</p><div class="src-tags"><span class="src-tag">Fleet</span><span class="src-tag">Research</span><span class="src-tag">Sizing Model</span></div><div class="card-footer"><a href="https://flora.insead.edu/fichiersti_wp/inseadwp2010/2010-38.pdf" class="source-link" target="_blank">insead.edu (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="fleet"><div class="card-top"><span class="org-badge">French Red Cross</span><span class="lang-badge">FR / EN</span></div><h4>Logistics Handbook (Manuel de Logistique)</h4><div class="src-meta">French Red Cross / Humanitarian Library · Undated · Field Guide</div><p class="src-description">Practical field logistics guide covering the IN-STORE-OUT model, FIFO stock management, warehouse organisation, documentation chains, and transport planning.</p><p class="src-game-use">Warehouse events, stock management mechanics, and the depot/supply chain gameplay layer.</p><div class="src-tags"><span class="src-tag">Logistics</span><span class="src-tag">Supply Chain</span><span class="src-tag">Field Guide</span></div><div class="card-footer"><a href="https://www.humanitarianlibrary.org/sites/default/files/2019/04/Logistics%20Handbook%20French%20Red%20Cross.pdf" class="source-link" target="_blank">humanitarianlibrary.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="fleet"><div class="card-top"><span class="org-badge">Fleet Forum</span><span class="lang-badge">EN</span></div><h4>Developing Fleet Strategy — Tools &amp; Templates</h4><div class="src-meta">Fleet Forum Knowledge Platform · Ongoing · Reference</div><p class="src-description">Templates and frameworks for fleet strategy, including performance management and cost controlling. Transportation is the cornerstone of programme delivery.</p><p class="src-game-use">Strategic fleet planning decisions, buy/lease/dispose tradeoffs, and the fleet KPI dashboard.</p><div class="src-tags"><span class="src-tag">Fleet</span><span class="src-tag">Strategy</span><span class="src-tag">Templates</span></div><div class="card-footer"><a href="https://knowledge.fleetforum.org/knowledge-base/article/developing-fleet-strategy" class="source-link" target="_blank">knowledge.fleetforum.org</a><span class="access-badge access-partial">Partial (login)</span></div></div>
+    </div>
+
+    <div class="sources-section-header" data-section="security"><h3>Security &amp; Access Negotiation</h3><span class="src-count">6 sources</span></div>
+    <div class="source-grid">
+      <div class="source-card" data-cat="security"><div class="card-top"><span class="org-badge">ICRC</span><span class="lang-badge">EN / FR</span></div><h4>Staying Alive: Safety and Security Guidelines for Humanitarian Volunteers in Conflict Areas (2006)</h4><div class="src-meta">ICRC · 2006 · Handbook</div><p class="src-description">The definitive security manual for field workers. Covers threat assessment, acceptance as a protection strategy, armed escorts, checkpoints, kidnapping, and survival in conflict zones.</p><p class="src-game-use">The Acceptance mechanic, Security mechanic, checkpoint events, armed escort dilemmas, drunk soldier encounters, and night driving protocols.</p><div class="src-tags"><span class="src-tag">Security</span><span class="src-tag">ICRC</span><span class="src-tag">Primary Source</span></div><div class="card-footer"><a href="https://www.icrc.org/fr/publication/0717-staying-alive-safety-and-security-guidelines-humanitarian-volunteers-conflict-areas" class="source-link" target="_blank">icrc.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="security french"><div class="card-top"><span class="org-badge">ICRC</span><span class="lang-badge">FR</span></div><h4>SAFE — Manuel de sécurité pour les humanitaires (2022)</h4><div class="src-meta">ICRC · 2022 · Handbook</div><p class="src-description">Updated ICRC security management framework. Integrates field security with daily operations management and more recent operational contexts.</p><p class="src-game-use">Supplement for recent threat scenarios and the concept of "residual risk" — the irreducible danger that remains even with full precautions.</p><div class="src-tags"><span class="src-tag">Security</span><span class="src-tag">ICRC</span><span class="src-tag">French</span></div><div class="card-footer"><a href="https://www.icrc.org/fr/publication/4425-safe-manuel-de-securite-pour-les-humanitaires" class="source-link" target="_blank">icrc.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="security french"><div class="card-top"><span class="org-badge">ICRC</span><span class="lang-badge">FR</span></div><h4>Les opérations du CICR sur le terrain : la question de la sécurité</h4><div class="src-meta">ICRC · International Review of the Red Cross · Article</div><p class="src-description">Conceptual framework articulating the "irreducible residual risk" and the foundational role of acceptance as a protection strategy.</p><p class="src-game-use">Philosophical basis for the risk/impact tradeoff: risks are only accepted if the humanitarian impact justifies them.</p><div class="src-tags"><span class="src-tag">Security</span><span class="src-tag">Acceptance</span><span class="src-tag">French</span></div><div class="card-footer"><a href="https://www.icrc.org/fr/doc/resources/documents/misc/5fzev3.htm" class="source-link" target="_blank">icrc.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="security"><div class="card-top"><span class="org-badge">OCHA</span><span class="lang-badge">EN</span></div><h4>Humanitarian Negotiations with Armed Groups: A Manual for Practitioners (2006)</h4><div class="src-meta">McHugh &amp; Bessler / OCHA · 2006 · Manual</div><p class="src-description">The standard UN manual for access negotiation. Covers preparation, principles, tactics, and case studies from real negotiations with armed non-state actors.</p><p class="src-game-use">The access negotiation system, dialogue options with armed factions, and the four-pillar acceptance framework.</p><div class="src-tags"><span class="src-tag">Access</span><span class="src-tag">Negotiation</span><span class="src-tag">OCHA</span></div><div class="card-footer"><a href="https://www.onlinelibrary.iihl.org/wp-content/uploads/2020/05/2006-OCHA-HumanitarianNegotiationswArmedGroupsManual.pdf" class="source-link" target="_blank">iihl.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="security drc"><div class="card-top"><span class="org-badge">Geneva Call</span><span class="lang-badge">EN</span></div><h4>Negotiation of Humanitarian Access in North Kivu (2018)</h4><div class="src-meta">Geneva Call · 2018 · Research Report</div><p class="src-description">Field research across 4 ANSAs, 6 communities, and 37 NGOs in North Kivu. Identifies why smaller organisations lose access first and the four conditions for effective access.</p><p class="src-game-use">Direct basis for the Acceptance/Access mechanic and how organisation size affects access.</p><div class="src-tags"><span class="src-tag">Access</span><span class="src-tag">North Kivu</span><span class="src-tag">DRC</span></div><div class="card-footer"><a href="https://reliefweb.int/report/democratic-republic-congo/negotiation-humanitarian-access-north-kivu-perception-armed-non" class="source-link" target="_blank">reliefweb.int</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="security drc"><div class="card-top"><span class="org-badge">MSF / CRASH</span><span class="lang-badge">EN</span></div><h4>North Kivu Case Study: Humanitarian Access and Response (2013)</h4><div class="src-meta">MSF · 2013 · Operational Case Study</div><p class="src-description">Case study of humanitarian operations in North Kivu during the M23 offensive. Covers MSF's refusal to evacuate and the operational consequences of maintaining presence during acute conflict.</p><p class="src-game-use">The "stay or evacuate" decision event and the MSF non-evacuation model as a gameplay option.</p><div class="src-tags"><span class="src-tag">Access</span><span class="src-tag">North Kivu</span><span class="src-tag">MSF</span></div><div class="card-footer"><a href="https://www.msf.org/sites/default/files/drc_case_study_final_external.pdf" class="source-link" target="_blank">msf.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+    </div>
+
+    <div class="sources-section-header" data-section="wash"><h3>WASH &amp; Epidemic Response</h3><span class="src-count">5 sources</span></div>
+    <div class="source-grid">
+      <div class="source-card" data-cat="wash standards"><div class="card-top"><span class="org-badge">Sphere</span><span class="lang-badge">EN / FR / ES +</span></div><h4>The Sphere Handbook: Humanitarian Charter and Minimum Standards (4th edition, 2018)</h4><div class="src-meta">Sphere Association · 2018 · Standards Handbook</div><p class="src-description">The global reference for minimum humanitarian standards. Technical chapters cover WASH, food security, shelter, and health. Used by governments, UN agencies, and NGOs worldwide.</p><p class="src-game-use">All WASH thresholds: litres/person/day, latrine ratios, chlorine residual targets, and the minimum water reserve of 3 days.</p><div class="src-tags"><span class="src-tag">WASH</span><span class="src-tag">Standards</span><span class="src-tag">Sphere</span></div><div class="card-footer"><a href="https://spherestandards.org/wp-content/uploads/Sphere-Handbook-2018-EN.pdf" class="source-link" target="_blank">spherestandards.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="wash"><div class="card-top"><span class="org-badge">MSF</span><span class="lang-badge">EN / FR</span></div><h4>Public Health Engineering in Precarious Situations (2010)</h4><div class="src-meta">MSF · 2010 · Technical Manual</div><p class="src-description">MSF's field WASH manual. Covers water supply systems, chlorination, latrine construction, hygiene promotion, and emergency WASH response.</p><p class="src-game-use">Direct source for chlorine dosing mechanics, FRC monitoring, water trucking calculations, and the latrine overflow event.</p><div class="src-tags"><span class="src-tag">WASH</span><span class="src-tag">MSF</span><span class="src-tag">Primary Source</span></div><div class="card-footer"><a href="https://medicalguidelines.msf.org" class="source-link" target="_blank">medicalguidelines.msf.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="wash"><div class="card-top"><span class="org-badge">MSF</span><span class="lang-badge">EN / FR</span></div><h4>Management of a Cholera Epidemic (multiple editions)</h4><div class="src-meta">MSF · Various editions · Clinical &amp; Operational Guide</div><p class="src-description">MSF's operational and clinical guide for cholera response. Covers CTC/CTU/ORP network design, oral rehydration therapy, IV protocols, case fatality rate targets, and chlorination point management.</p><p class="src-game-use">Full cholera epidemic mechanics: the 3-tier treatment network, CFR tracker, and the 3% CFR hard loss condition.</p><div class="src-tags"><span class="src-tag">Cholera</span><span class="src-tag">Epidemic</span><span class="src-tag">MSF</span></div><div class="card-footer"><a href="https://medicalguidelines.msf.org" class="source-link" target="_blank">medicalguidelines.msf.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="wash drc"><div class="card-top"><span class="org-badge">MSF</span><span class="lang-badge">EN</span></div><h4>DRC Cholera Outbreaks — Field Reports (2002–present)</h4><div class="src-meta">MSF · Multiple reports · Operational Updates</div><p class="src-description">Field reports on cholera outbreaks in DRC. Document real CTC setup timelines, patient intake volumes, CFR spikes, water point failures, and supply logistics challenges.</p><p class="src-game-use">Calibration data for epidemic event timing and the "dry season water source contamination" event.</p><div class="src-tags"><span class="src-tag">Cholera</span><span class="src-tag">DRC</span><span class="src-tag">MSF</span></div><div class="card-footer"><a href="https://www.msf.org/democratic-republic-congo" class="source-link" target="_blank">msf.org/drc</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="wash fleet"><div class="card-top"><span class="org-badge">MSF / WHO</span><span class="lang-badge">EN</span></div><h4>Campaign Logistics — MSF Medical Guidelines (Chapter 6.5)</h4><div class="src-meta">MSF Medical Guidelines · Ongoing · Online Reference</div><p class="src-description">Logistics requirements for mass vaccination campaigns: cold chain, vehicle and fuel co-location, generator continuity for refrigeration, centralised supply point design.</p><p class="src-game-use">Cold chain integrity mechanic, VVM triage events, and campaign logistics coordination.</p><div class="src-tags"><span class="src-tag">Vaccination</span><span class="src-tag">Cold Chain</span><span class="src-tag">Logistics</span></div><div class="card-footer"><a href="https://medicalguidelines.msf.org/en/viewport/mme/english/6-5-campaign-logistics-32408109.html" class="source-link" target="_blank">medicalguidelines.msf.org</a><span class="access-badge access-free">Free</span></div></div>
+    </div>
+
+    <div class="sources-section-header" data-section="drc"><h3>DRC Field Context &amp; Real Incidents</h3><span class="src-count">5 sources</span></div>
+    <div class="source-grid">
+      <div class="source-card" data-cat="drc"><div class="card-top"><span class="org-badge">OCHA</span><span class="lang-badge">EN</span></div><h4>DR Congo: Intensification of Violence in North and South Kivu — Sitrep #1 (Feb 2025)</h4><div class="src-meta">OCHA · 3 February 2025 · Situation Report</div><p class="src-description">Covers the fall of Goma to M23/AFC forces. Documents warehouse looting of WFP, ICRC, MSF, UNHCR and WHO; vehicle hijacking; access suspension along the Goma-Sake axis; 2,880 injured treated.</p><p class="src-game-use">Multiple events: warehouse looting, vehicle hijacking, road axis closures, mpox/cholera co-epidemic scenario, and IDP site overflow.</p><div class="src-tags"><span class="src-tag">DRC</span><span class="src-tag">North Kivu</span><span class="src-tag">Incidents</span><span class="src-tag">2025</span></div><div class="card-footer"><a href="https://www.unocha.org/publications/report/democratic-republic-congo/dr-congo-intensification-violence-north-kivu-and-south-kivu-provinces-situation-report-1-3-february-2025" class="source-link" target="_blank">unocha.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="drc security"><div class="card-top"><span class="org-badge">MSF</span><span class="lang-badge">EN</span></div><h4>Civilians and MSF Teams Trapped by Violence in Walikale, DRC (2025)</h4><div class="src-meta">MSF · March 2025 · Field Update</div><p class="src-description">Crossfire hit the MSF logistics base, damaging vehicles and structures. Airport became inoperative, cutting air resupply. Teams faced critical medicine shortages within two weeks.</p><p class="src-game-use">Airport closure event; vehicle damage from crossfire; countdown-to-stockout mechanic ("14 days of supplies remaining").</p><div class="src-tags"><span class="src-tag">DRC</span><span class="src-tag">Walikale</span><span class="src-tag">MSF</span><span class="src-tag">Incidents</span></div><div class="card-footer"><a href="https://www.msf.org/civilians-and-msf-teams-trapped-violence-walikale-drc" class="source-link" target="_blank">msf.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="drc security fleet"><div class="card-top"><span class="org-badge">MSF</span><span class="lang-badge">EN</span></div><h4>DRC: Civilians Caught in Crossfire in North and South Kivu (2023)</h4><div class="src-meta">MSF · 2023 · Field Report</div><p class="src-description">Road from South Kivu to Goma blocked; supplies could only reach teams by boat from Lake Kivu or off-road by motorbike. MSF suspended activities on several occasions.</p><p class="src-game-use">"Route blocked" event with three-choice logistics: wait, boat (slow/expensive), motorbike (risky/low capacity).</p><div class="src-tags"><span class="src-tag">DRC</span><span class="src-tag">North Kivu</span><span class="src-tag">MSF</span><span class="src-tag">Route Closure</span></div><div class="card-footer"><a href="https://www.msf.org/drc-civilians-caught-crossfire-north-and-south-kivu" class="source-link" target="_blank">msf.org</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="drc security"><div class="card-top"><span class="org-badge">ACAPS</span><span class="lang-badge">EN</span></div><h4>Conflict Escalation in Goma, North Kivu — ACAPS Analysis (Feb 2025)</h4><div class="src-meta">ACAPS · 5 February 2025 · Conflict Analysis</div><p class="src-description">Analysis of the January 2025 M23/AFC offensive. Documents armed groups controlling routes RN2, RP1030, and RP529; Lake Kivu port closure; over 700,000 people displaced.</p><p class="src-game-use">Named real road axes used in the game's route system. Lake Kivu port closure event.</p><div class="src-tags"><span class="src-tag">DRC</span><span class="src-tag">Goma</span><span class="src-tag">Routes</span><span class="src-tag">2025</span></div><div class="card-footer"><a href="https://www.acaps.org/fileadmin/Data_Product/Main_media/20250205_ACAPS_Conflict_escalation_in_Goma-North_Kivu.pdf" class="source-link" target="_blank">acaps.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="drc security"><div class="card-top"><span class="org-badge">MSF</span><span class="lang-badge">EN</span></div><h4>MSF Briefing to the UN Security Council on Violence in DRC (2024)</h4><div class="src-meta">MSF / Dr Javid Abdelmoneim · 2024 · Testimony</div><p class="src-description">Testimony to the UNSC. Documents summary killings, systematic sexual violence (155 survivors/day average), looting, and access obstruction by all armed parties. Trauma admissions at Rutshuru Hospital up 67%.</p><p class="src-game-use">Hospital trauma surge event, multi-faction hostility system, and the moral weight of the "stay and deliver" decision.</p><div class="src-tags"><span class="src-tag">DRC</span><span class="src-tag">MSF</span><span class="src-tag">Violence</span><span class="src-tag">Access</span></div><div class="card-footer"><a href="https://www.msf.org/msf-briefs-unsc-staggering-violence-drc" class="source-link" target="_blank">msf.org</a><span class="access-badge access-free">Free</span></div></div>
+    </div>
+
+    <div class="sources-section-header" data-section="standards"><h3>Humanitarian Law &amp; Principles</h3><span class="src-count">3 sources</span></div>
+    <div class="source-grid">
+      <div class="source-card" data-cat="standards"><div class="card-top"><span class="org-badge">OCHA</span><span class="lang-badge">EN</span></div><h4>OCHA on Message: Humanitarian Principles (2022)</h4><div class="src-meta">OCHA · July 2022 · Policy Brief</div><p class="src-description">Concise reference on the four core humanitarian principles: humanity, neutrality, impartiality, independence. Explains their operational relevance for negotiations with non-state armed groups.</p><p class="src-game-use">The four humanitarian principles are surfaced as gameplay constraints — compromising them triggers access penalties and morale loss.</p><div class="src-tags"><span class="src-tag">Principles</span><span class="src-tag">OCHA</span><span class="src-tag">Standards</span></div><div class="card-footer"><a href="https://www.onlinelibrary.iihl.org/wp-content/uploads/2021/07/OCHA-Humanitarian-Principles.pdf" class="source-link" target="_blank">iihl.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="standards french"><div class="card-top"><span class="org-badge">ICRC</span><span class="lang-badge">FR</span></div><h4>Le cadre juridique de l'accès humanitaire dans les conflits armés (2011)</h4><div class="src-meta">Schwendimann / ICRC · International Review of the Red Cross · 2011 · Article</div><p class="src-description">Legal framework for humanitarian access under IHL. Covers consent requirements, obligations to facilitate aid, and the distinction between access denial and legitimate security measures.</p><p class="src-game-use">Legal grounding for access negotiation events — when denial of access constitutes an IHL violation.</p><div class="src-tags"><span class="src-tag">IHL</span><span class="src-tag">Access</span><span class="src-tag">Legal</span><span class="src-tag">French</span></div><div class="card-footer"><a href="https://international-review.icrc.org/sites/default/files/irrc-884-schwendimann-fre.pdf" class="source-link" target="_blank">icrc.org (PDF)</a><span class="access-badge access-free">Free</span></div></div>
+      <div class="source-card" data-cat="standards"><div class="card-top"><span class="org-badge">OCHA / UN</span><span class="lang-badge">EN</span></div><h4>Humanitarian Access — OCHA Resource Hub</h4><div class="src-meta">OCHA · Ongoing · Policy Resource</div><p class="src-description">OCHA's central resource on humanitarian access, including the Access Monitoring and Reporting Framework, guidance on non-state armed group engagement, and reference documents on armed escorts.</p><p class="src-game-use">Reference framework for the access constraint classification (physical obstruction, bureaucratic denial, insecurity-based suspension).</p><div class="src-tags"><span class="src-tag">Access</span><span class="src-tag">OCHA</span><span class="src-tag">Framework</span></div><div class="card-footer"><a href="https://www.unocha.org/humanitarian-access" class="source-link" target="_blank">unocha.org</a><span class="access-badge access-free">Free</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="design-docs">
+  <div class="section-inner">
+    <div class="section-label">Design Documents</div>
+    <h2>The full project archive.</h2>
+    <div class="divider"></div>
+    <p class="lead">Every document produced across the development of Humanitarian Worker Simulator — from the game itself to the org chart, world-building assets, and developer guides. All in one place.</p>
+
+    <div class="docs-grid">
+
+      <!-- GAME -->
+      <a href="hws-v5.html" class="doc-card featured">
+        <div class="doc-icon">🎮</div>
+        <div class="doc-type">Playable Game</div>
+        <div class="doc-title">Humanitarian Worker Simulator — v5</div>
+        <div class="doc-desc">The current playable prototype. 26-week missions, 13 humanitarian positions, 3-outcome decision system with dice roll, dual superior chain, discovery arc, and mission debrief. Browser-based, no install required.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML · Browser</span></div>
+      </a>
+
+      <!-- DEVLOG -->
+      <a href="devlog.html" class="doc-card">
+        <div class="doc-icon">📓</div>
+        <div class="doc-type">Development Journal</div>
+        <div class="doc-title">Devlog — From First Idea to v5</div>
+        <div class="doc-desc">A chronological field logbook of the game's development. 11 entries covering the original concept, ARAN brand creation, each prototype version, the research phase, architecture decisions, and the two-track Unity + PWA strategy.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML</span></div>
+      </a>
+
+      <!-- ORG CHART -->
+      <a href="aran-orgchart.html" class="doc-card">
+        <div class="doc-icon">🏗️</div>
+        <div class="doc-type">Game Design Document</div>
+        <div class="doc-title">ARAN Org Chart — 13 Positions &amp; Chain of Command</div>
+        <div class="doc-desc">Complete humanitarian org structure with all 13 playable positions, full names and acronyms, dual superior chains (technical + mission), HQ referents, and the unique HP dual reporting line. Based on real MSF field structure.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML</span></div>
+      </a>
+
+      <!-- COUNTRIES -->
+      <a href="aran-countries.html" class="doc-card">
+        <div class="doc-icon">🌍</div>
+        <div class="doc-type">World-Building</div>
+        <div class="doc-title">The Four Fictional Countries</div>
+        <div class="doc-desc">Full reference sheet for Tavara, Morvalk, Zelundi, and Khadara — the four fictional countries where ARAN operates. Includes flags, capitals, terrain, humanitarian challenges, ARAN fleet composition, and difficulty rating for each.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML</span></div>
+      </a>
+
+      <!-- WEEKEND ROADMAP -->
+      <a href="weekend-roadmap.html" class="doc-card">
+        <div class="doc-icon">📅</div>
+        <div class="doc-type">Development Plan</div>
+        <div class="doc-title">Weekend Roadmap — Ship v1</div>
+        <div class="doc-desc">A 4-phase, 7-weekend plan for getting the game from prototype to a shareable v1. Includes anti-scope rules, session structure, feature freeze list, and a concrete definition of "done". Built to work around a one-day-per-weekend cadence.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML</span></div>
+      </a>
+
+      <!-- INDIE ROADMAP -->
+      <a href="indie-roadmap.html" class="doc-card">
+        <div class="doc-icon">🗺️</div>
+        <div class="doc-type">Strategic Roadmap</div>
+        <div class="doc-title">Indie Game Development Roadmap</div>
+        <div class="doc-desc">A 6-phase, 12-month roadmap benchmarked against comparable serious and indie games — Papers Please, This War of Mine, Spilled!, Conscript. Covers prototype validation, field playtesting, Android build, content expansion, and release strategy.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML</span></div>
+      </a>
+
+      <!-- UNITY TUTORIAL -->
+      <a href="hws-unity-tutorial.docx" class="doc-card">
+        <div class="doc-icon">📘</div>
+        <div class="doc-type">Developer Guide</div>
+        <div class="doc-title">Unity Developer Tutorial — 16 Chapters</div>
+        <div class="doc-desc">A complete guide to the HWS Unity/C# project. Covers all core systems (GameState, GameEngine, EventSystem, LocalisationManager, SaveSystem), JSON data architecture, UI Toolkit, Android deployment, and a recommended build order. Written from the actual project files.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-docx">DOCX</span></div>
+      </a>
+
+      <!-- SOURCES -->
+      <a href="#sources" class="doc-card">
+        <div class="doc-icon">📚</div>
+        <div class="doc-type">Research</div>
+        <div class="doc-title">Sources &amp; References — 25 Field Documents</div>
+        <div class="doc-desc">Every real-world source behind the game mechanics. 25 documents across fleet &amp; logistics, security &amp; access, WASH &amp; epidemics, DRC field context, and humanitarian law. Each mapped to the specific mechanic it grounds.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">On this page</span></div>
+      </a>
+
+      <!-- MISSION COMPOSITION GDD -->
+      <a href="gdd-mission-composition.html" class="doc-card">
+        <div class="doc-icon">🗂️</div>
+        <div class="doc-type">Game Design Document</div>
+        <div class="doc-title">Mission Composition &amp; NPC System</div>
+        <div class="doc-desc">No mission has a full org chart. This GDD covers how real field projects are staffed, the three mission scales (3–8, 8–25, 25+ intl. staff), the three NPC tiers (named, functional, absent), design rules for building scenarios, and how role compression and vacancies function as gameplay mechanics rather than bugs.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML · GDD</span></div>
+      </a>
+
+      <!-- FUNCTION GRID -->
+      <a href="aran-function-grid.html" class="doc-card">
+        <div class="doc-icon">📋</div>
+        <div class="doc-type">Official Reference</div>
+        <div class="doc-title">IRFFG-OCB Function Grid — All 234 MSF Positions</div>
+        <div class="doc-desc">The complete official MSF position reference (IRFFG-OCB): 234 positions, 5 professional groups, 4 job families, levels 1–15. Filterable by family, searchable by name or code. Includes a game-relevant filter (Level 9+) showing the 97 positions directly relevant to the simulator.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML · 234 positions</span></div>
+      </a>
+
+      <!-- PAINTING REFERENCE -->
+      <a href="painting-reference.html" class="doc-card">
+        <div class="doc-icon">🎨</div>
+        <div class="doc-type">Art Reference</div>
+        <div class="doc-title">Painting Reference Bank</div>
+        <div class="doc-desc">A curated visual reference bank for the game's digital art assets — Toyota Land Cruiser HZJ76, field bases, landscapes across the four country terrains, and ARAN vehicle livery reference. Built to support hand-painted digital art in Unity.</div>
+        <div class="doc-meta"><span class="doc-tag doc-tag-html">HTML</span></div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section id="about-me">
+  <div class="section-inner">
+    <div class="section-label">The Author</div>
+    <h2>Built from field experience.</h2>
+    <div class="divider"></div>
+    <div class="about-me-card">
+      <div class="about-me-left">
+        <div>
+          <div class="avatar-placeholder">🧑‍💼</div>
+          <div class="name">The Creator</div>
+          <div class="role">Fleet Manager · Independent Developer</div>
+        </div>
+        <div class="experience-badges">
+          <div class="exp-badge"><strong>4 Years</strong>MSF Field Operations</div>
+          <div class="exp-badge"><strong>Fleet &amp; Logistics</strong>Specialist Focus</div>
+        </div>
+      </div>
+      <div class="about-me-right">
+        <h3>This game comes from a place, not a concept.</h3>
+        <p>I spent four years working in the field with MSF — Médecins Sans Frontières. My role was in fleet management and logistics: the infrastructure that makes everything else possible. When a surgical team can't reach patients because a vehicle isn't moving, the medicine in the warehouse means nothing.</p>
+        <p>I built this simulator because I found that most people who want to work in humanitarian aid have very little understanding of how operations actually function. The complexity is invisible from the outside. The decisions are hard not because the right answer is unclear, but because every option costs something.</p>
+        <p>This is a personal project — made in the margins of other work, built iteratively, guided by the same principle I learned in the field: <em>start with what you have, adapt as you go.</em></p>
+        <p style="color:var(--ink-lt);font-size:0.9rem;">More details will be shared as the project develops.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="play">
+  <div class="section-inner">
+    <div class="section-label">Access the Game</div>
+    <h2>The mission is waiting.</h2>
+    <p class="lead">Humanitarian Worker Simulator is currently in active development. A playable version will be available here soon.</p>
+    <div class="coming-soon-card">
+      <div class="cs-icon">🚐</div>
+      <div class="cs-title">Coming Soon</div>
+      <div class="cs-sub">The game is in its fourth development iteration. We're playtesting the new interface and expanding the scenario library before the public release.</div>
+      <div class="cs-progress">
+        <div class="cs-progress-label"><span>Development Progress</span><span>~60%</span></div>
+        <div class="cs-progress-bar"><div class="cs-progress-fill"></div></div>
+      </div>
+      <p style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:20px;">Leave your email to be notified at launch</p>
+      <div class="notify-form">
+        <input type="email" placeholder="your@email.com">
+        <button type="button">Notify Me</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="donate">
+  <div class="section-inner" style="text-align:center;">
+    <div class="section-label" style="justify-content:center;"><span style="display:block;width:24px;height:2px;background:var(--amber);"></span>Support the Project</div>
+    <h2>Help keep the mission running.</h2>
+    <div class="divider" style="margin:16px auto 24px;"></div>
+    <p style="color:var(--ink-mid);max-width:580px;margin:0 auto 32px;line-height:1.75;">This is a solo, independent project. There's no studio, no publisher — just a former fleet manager building a game in their spare time. Every contribution goes directly into development time and playtesting.</p>
+    <div class="donate-disclaimer">⚠ &nbsp;ARAN is fictional. Donations support this indie game project, not a real NGO.</div>
+    <div class="donate-grid">
+      <a href="#" class="donate-tier" onclick="return false;"><div class="tier-icon">☕</div><div class="tier-title">Field Ration</div><div class="tier-amount">€5</div><div class="tier-desc">Keeps one developer caffeinated for half a day of coding.</div></a>
+      <a href="#" class="donate-tier featured" onclick="return false;"><div class="featured-label">Most Appreciated</div><div class="tier-icon">⛽</div><div class="tier-title">Fuel the Fleet</div><div class="tier-amount">€20</div><div class="tier-desc">Covers one full day of development and new scenario work.</div></a>
+      <a href="#" class="donate-tier" onclick="return false;"><div class="tier-icon">🚁</div><div class="tier-title">Emergency Airlift</div><div class="tier-amount">€50</div><div class="tier-desc">Major contributor. Name in the credits and early access to new versions.</div></a>
+    </div>
+    <a href="#" class="donate-main-btn" onclick="alert('Donation link coming soon! Thank you for your support.'); return false;">♥ &nbsp;Donate via PayPal / Ko-fi</a>
+    <div class="donate-note">Secure payment · No account required · Link to be added shortly</div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-diamond"><span>A</span></div>
+      <span class="footer-name">Humanitarian Worker Simulator</span>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#about-aran">ARAN</a></li>
+      <li><a href="#about-game">The Game</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#sources">Sources</a></li>
+      <li><a href="#design-docs">Docs</a></li>
+      <li><a href="#about-me">Author</a></li>
+      <li><a href="#play">Play</a></li>
+      <li><a href="#donate">Donate</a></li>
+    </ul>
+    <div class="footer-copy">ARAN is a fictional organisation. © 2025 Humanitarian Worker Simulator — Independent Game Project.</div>
+  </div>
+</footer>
+
+<script>
+function filterSources(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.source-card').forEach(card => {
+    if (cat === 'all') { card.classList.remove('hidden'); }
+    else { card.classList.toggle('hidden', !(card.dataset.cat||'').split(' ').includes(cat)); }
+  });
+  document.querySelectorAll('.sources-section-header').forEach(header => {
+    const grid = header.nextElementSibling;
+    if (cat === 'all') { header.style.display=''; grid.style.display=''; }
+    else {
+      const visible = grid.querySelectorAll('.source-card:not(.hidden)').length;
+      header.style.display = visible===0 ? 'none' : '';
+      grid.style.display = visible===0 ? 'none' : '';
+    }
+  });
+}
+</script>
+</body>
+</html>
