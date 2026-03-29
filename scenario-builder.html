@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAN Scenario Builder — Humanitarian Worker Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --green:      #1B4332;
+  --green-mid:  #2D6A4F;
+  --green-lt:   #52B788;
+  --green-pale: #D8F3DC;
+  --amber:      #E07B00;
+  --amber-lt:   #F4A261;
+  --cream:      #F2EEE5;
+  --paper:      #E8E3D8;
+  --border:     #D0CBC0;
+  --border-dk:  #B8B2A8;
+  --ink:        #1A1908;
+  --ink-mid:    #3D3C30;
+  --ink-lt:     #7A7860;
+  --red:        #C0392B;
+  --red-lt:     #FDECEA;
+  --blue:       #2563A8;
+  --blue-lt:    #DBEAFE;
+  --purple:     #7C3AED;
+  --purple-lt:  #EDE9FE;
+  --teal:       #0D9488;
+  --teal-lt:    #CCFBF1;
+  --shadow:     0 2px 8px rgba(27,67,50,0.10);
+  --shadow-lg:  0 8px 32px rgba(27,67,50,0.15);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:'Source Sans 3',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.6;
+  min-height:100vh;
+}
+
+/* ── LAYOUT ── */
+.app { display:grid; grid-template-columns:260px 1fr 340px; min-height:100vh; }
+
+/* ── LEFT NAV ── */
+.sidebar {
+  background:var(--green);
+  display:flex; flex-direction:column;
+  position:sticky; top:0; height:100vh;
+  overflow-y:auto;
+  box-shadow:2px 0 12px rgba(0,0,0,0.2);
+  z-index:10;
+}
+
+.sidebar-logo {
+  padding:20px 18px 14px;
+  border-bottom:1px solid rgba(255,255,255,0.12);
+  display:flex; align-items:center; gap:10px;
+}
+.logo-diamond {
+  width:30px; height:30px;
+  background:var(--amber);
+  transform:rotate(45deg);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.logo-diamond span { transform:rotate(-45deg); font-weight:900; font-size:13px; color:#fff; }
+.logo-text { }
+.logo-title { font-weight:800; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:#fff; line-height:1; }
+.logo-sub { font-size:9px; color:rgba(255,255,255,0.4); letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; }
+
+.nav-section-label {
+  padding:14px 18px 6px;
+  font-size:8px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase;
+  color:rgba(255,255,255,0.35);
+}
+
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 18px;
+  cursor:pointer;
+  border-left:3px solid transparent;
+  transition:all 0.15s;
+  color:rgba(255,255,255,0.65);
+  font-size:13px; font-weight:600;
+  text-decoration:none;
+}
+.nav-item:hover { background:rgba(255,255,255,0.07); color:#fff; }
+.nav-item.active { background:rgba(255,255,255,0.10); border-left-color:var(--amber); color:#fff; }
+.nav-item .nav-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+.nav-item .nav-badge {
+  margin-left:auto;
+  background:rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.6);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:9px; padding:1px 6px; border-radius:10px;
+}
+.nav-item .nav-badge.ok { background:rgba(82,183,136,0.3); color:#74C69D; }
+
+.sidebar-actions {
+  margin-top:auto;
+  padding:16px 18px;
+  border-top:1px solid rgba(255,255,255,0.12);
+  display:flex; flex-direction:column; gap:8px;
+}
+
+.btn-download {
+  background:var(--amber);
+  color:#fff;
+  border:none; cursor:pointer;
+  padding:10px 16px;
+  border-radius:2px;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  transition:background 0.2s;
+  width:100%;
+}
+.btn-download:hover { background:var(--amber-lt); }
+
+.btn-preview {
+  background:rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.8);
+  border:1px solid rgba(255,255,255,0.2); cursor:pointer;
+  padding:9px 16px;
+  border-radius:2px;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  transition:all 0.2s;
+  width:100%;
+}
+.btn-preview:hover { background:rgba(255,255,255,0.15); }
+
+/* ── MAIN CONTENT ── */
+.main {
+  overflow-y:auto;
+  padding:32px 36px;
+}
+
+.section-panel {
+  display:none;
+  animation:fadeIn 0.2s ease;
+}
+.section-panel.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+.panel-header {
+  margin-bottom:28px;
+  padding-bottom:16px;
+  border-bottom:2px solid var(--border);
+}
+.panel-header .label {
+  font-size:9px; font-weight:700; letter-spacing:3px; text-transform:uppercase;
+  color:var(--amber); margin-bottom:6px;
+}
+.panel-header h2 {
+  font-family:'Libre Baskerville',serif;
+  font-size:1.5rem; color:var(--ink); margin-bottom:4px;
+}
+.panel-header p {
+  font-size:13px; color:var(--ink-lt); line-height:1.6;
+}
+
+/* ── FORM ELEMENTS ── */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
+.form-full { margin-bottom:16px; }
+
+.field-group { display:flex; flex-direction:column; gap:5px; }
+.field-label {
+  font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--ink-mid);
+}
+.field-hint { font-size:11px; color:var(--ink-lt); margin-top:1px; }
+
+input[type=text], input[type=number], select, textarea {
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:2px;
+  padding:9px 12px;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:13px;
+  color:var(--ink);
+  outline:none;
+  transition:border-color 0.15s;
+  width:100%;
+}
+input:focus, select:focus, textarea:focus { border-color:var(--green-lt); }
+textarea { resize:vertical; min-height:72px; }
+
+.range-row { display:flex; align-items:center; gap:12px; }
+input[type=range] {
+  flex:1; padding:0;
+  accent-color:var(--green);
+  background:transparent;
+  border:none;
+}
+.range-val {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px; font-weight:700;
+  color:var(--green);
+  min-width:36px; text-align:right;
+}
+
+/* ── CARD COMPONENTS ── */
+.card {
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:3px;
+  padding:20px;
+  margin-bottom:14px;
+  position:relative;
+  transition:box-shadow 0.15s;
+}
+.card:hover { box-shadow:var(--shadow); }
+.card-header {
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:14px; padding-bottom:10px;
+  border-bottom:1px solid var(--paper);
+}
+.card-icon { font-size:18px; }
+.card-title { font-weight:700; font-size:14px; color:var(--ink); flex:1; }
+.card-remove {
+  background:none; border:none; cursor:pointer;
+  color:var(--ink-lt); font-size:16px; padding:2px 6px;
+  border-radius:2px; transition:all 0.15s;
+}
+.card-remove:hover { background:var(--red-lt); color:var(--red); }
+
+/* ── STAFF TABLE ── */
+.staff-table { width:100%; border-collapse:collapse; font-size:12px; }
+.staff-table th {
+  background:var(--green); color:#fff;
+  padding:8px 10px; text-align:left;
+  font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+}
+.staff-table td { padding:8px 10px; border-bottom:1px solid var(--paper); vertical-align:middle; }
+.staff-table tr:last-child td { border-bottom:none; }
+.staff-table tr:nth-child(even) td { background:var(--cream); }
+
+.tier-select {
+  padding:4px 8px; font-size:11px; font-weight:600;
+  border-radius:2px; border:1px solid var(--border);
+  background:#fff; cursor:pointer; font-family:'Source Sans 3',sans-serif;
+}
+.tier-1 { border-color:#2563A8; color:#2563A8; background:#DBEAFE; }
+.tier-2 { border-color:var(--amber); color:var(--amber); background:#FEF3C7; }
+.tier-3 { border-color:var(--border); color:var(--ink-lt); background:var(--paper); }
+.tier-absent { border-color:var(--red); color:var(--red); background:var(--red-lt); }
+
+/* ── KPI SLIDERS ── */
+.kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.kpi-item { background:#fff; border:1px solid var(--border); border-radius:3px; padding:16px; }
+.kpi-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.kpi-icon { font-size:18px; }
+.kpi-name { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--ink-mid); flex:1; }
+.kpi-val-display {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:16px; font-weight:700; color:var(--green);
+}
+.kpi-bar { height:4px; background:var(--paper); border-radius:2px; margin-top:8px; overflow:hidden; }
+.kpi-bar-fill { height:100%; background:var(--green-lt); border-radius:2px; transition:width 0.2s; }
+
+/* ── EVENT CARDS ── */
+.event-card {
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:3px;
+  margin-bottom:16px;
+  overflow:hidden;
+}
+.event-card-header {
+  background:var(--cream);
+  padding:12px 16px;
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer; user-select:none;
+}
+.event-num {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px; font-weight:700;
+  background:var(--green); color:#fff;
+  padding:2px 7px; border-radius:2px;
+}
+.event-title-preview { font-size:13px; font-weight:600; color:var(--ink); flex:1; }
+.event-type-badge {
+  font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  padding:2px 8px; border-radius:2px;
+}
+.type-security { background:#FEF3C7; color:var(--amber); }
+.type-fleet    { background:#DBEAFE; color:var(--blue); }
+.type-wash     { background:#CCFBF1; color:var(--teal); }
+.type-medical  { background:var(--red-lt); color:var(--red); }
+.type-hr       { background:var(--purple-lt); color:var(--purple); }
+.type-supply   { background:var(--green-pale); color:var(--green); }
+.type-general  { background:var(--paper); color:var(--ink-lt); }
+.event-toggle { color:var(--ink-lt); font-size:12px; transition:transform 0.2s; }
+.event-toggle.open { transform:rotate(180deg); }
+.event-body { padding:16px; display:none; }
+.event-body.open { display:block; }
+
+.choice-block {
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-radius:2px;
+  padding:14px;
+  margin-bottom:10px;
+}
+.choice-block:last-child { margin-bottom:0; }
+.choice-header {
+  display:flex; align-items:center; gap:8px; margin-bottom:10px;
+}
+.choice-letter {
+  width:22px; height:22px;
+  border-radius:50%;
+  background:var(--green);
+  color:#fff;
+  font-size:10px; font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.choice-label-text { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--ink-mid); }
+.outcomes-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; }
+.outcome-cell { background:#fff; border:1px solid var(--border); border-radius:2px; padding:10px; }
+.outcome-cell-label {
+  font-size:8px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:6px;
+}
+.outcome-immediate .outcome-cell-label { color:var(--amber); }
+.outcome-medium .outcome-cell-label { color:var(--blue); }
+.outcome-longterm .outcome-cell-label { color:var(--purple); }
+
+.effects-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.effect-pill {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px; font-weight:600;
+  padding:2px 7px; border-radius:2px;
+  border:1px solid var(--border);
+  background:#fff; color:var(--ink-mid);
+  display:flex; align-items:center; gap:3px;
+}
+.effect-pos { background:var(--green-pale); border-color:var(--green-lt); color:var(--green); }
+.effect-neg { background:var(--red-lt); border-color:#F5C6C2; color:var(--red); }
+
+.dice-row { display:flex; gap:8px; margin-top:8px; align-items:center; }
+.dice-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--ink-lt); width:52px; }
+.dice-input { width:60px; text-align:center; }
+
+/* ── ADD BUTTONS ── */
+.add-btn {
+  background:#fff;
+  border:2px dashed var(--border);
+  color:var(--ink-lt);
+  padding:12px;
+  border-radius:3px;
+  cursor:pointer;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:13px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:all 0.2s;
+  width:100%;
+  margin-bottom:14px;
+}
+.add-btn:hover { border-color:var(--green-lt); color:var(--green); background:var(--green-pale); }
+
+/* ── SECTION DIVIDER ── */
+.section-sep {
+  font-size:9px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase;
+  color:var(--ink-lt); margin:24px 0 12px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-sep::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+
+/* ── RIGHT PANEL — JSON preview ── */
+.json-panel {
+  background:var(--ink);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  position:sticky; top:0; height:100vh;
+}
+.json-panel-header {
+  padding:14px 18px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  display:flex; align-items:center; gap:8px;
+}
+.json-panel-title { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.5); }
+.json-valid-badge {
+  margin-left:auto;
+  font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  padding:2px 8px; border-radius:2px;
+}
+.json-valid { background:rgba(82,183,136,0.2); color:#74C69D; }
+.json-invalid { background:rgba(192,57,43,0.2); color:#F1948A; }
+
+.json-path {
+  padding:8px 18px;
+  background:rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px; color:rgba(255,255,255,0.3);
+}
+.json-path span { color:rgba(255,255,255,0.6); }
+
+.json-output {
+  flex:1;
+  overflow-y:auto;
+  padding:16px 18px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  line-height:1.7;
+  color:#ABB2BF;
+  white-space:pre;
+}
+.json-output::-webkit-scrollbar { width:4px; }
+.json-output::-webkit-scrollbar-track { background:transparent; }
+.json-output::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); }
+
+/* JSON syntax highlight */
+.j-key    { color:#E06C75; }
+.j-str    { color:#98C379; }
+.j-num    { color:#D19A66; }
+.j-bool   { color:#56B6C2; }
+.j-null   { color:#56B6C2; }
+.j-punc   { color:#ABB2BF; }
+
+/* ── IMPORT ZONE ── */
+.import-zone {
+  border:2px dashed var(--border);
+  border-radius:3px;
+  padding:24px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.2s;
+  margin-bottom:16px;
+  background:#fff;
+}
+.import-zone:hover { border-color:var(--green-lt); background:var(--green-pale); }
+.import-zone .icon { font-size:28px; margin-bottom:8px; }
+.import-zone p { font-size:13px; color:var(--ink-lt); }
+.import-zone strong { color:var(--green); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:var(--green); color:#fff;
+  padding:10px 20px; border-radius:2px;
+  font-size:13px; font-weight:600;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.25s;
+  z-index:1000;
+}
+.toast.show { opacity:1; }
+
+/* ── FIELD NOTE ── */
+.field-note {
+  background:var(--green-pale);
+  border-left:3px solid var(--green-lt);
+  padding:10px 14px;
+  border-radius:0 3px 3px 0;
+  font-size:12px; color:var(--green);
+  margin-bottom:16px; line-height:1.6;
+}
+.warn-note {
+  background:#FFF3CD;
+  border-left:3px solid var(--amber);
+  padding:10px 14px;
+  border-radius:0 3px 3px 0;
+  font-size:12px; color:#856404;
+  margin-bottom:16px; line-height:1.6;
+}
+
+/* ── MOBILE HEADER (hidden on desktop) ── */
+.mobile-header {
+  display:none;
+  background:var(--green);
+  padding:12px 16px;
+  align-items:center; gap:10px;
+  position:sticky; top:0; z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+}
+.mobile-header .logo-diamond {
+  width:26px; height:26px;
+  background:var(--amber);
+  transform:rotate(45deg);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.mobile-header .logo-diamond span {
+  transform:rotate(-45deg);
+  font-weight:900; font-size:11px; color:#fff;
+}
+.mobile-header .hdr-title {
+  font-weight:800; font-size:12px; letter-spacing:1.5px;
+  text-transform:uppercase; color:#fff; line-height:1; flex:1;
+}
+.mobile-header .hdr-sub {
+  font-size:9px; color:rgba(255,255,255,0.45);
+  letter-spacing:1px; text-transform:uppercase;
+}
+.mobile-json-btn {
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.8);
+  border-radius:2px;
+  padding:6px 12px;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:11px; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase; cursor:pointer;
+  white-space:nowrap;
+}
+.mobile-dl-btn {
+  background:var(--amber);
+  border:none;
+  color:#fff;
+  border-radius:2px;
+  padding:6px 12px;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:11px; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase; cursor:pointer;
+  white-space:nowrap;
+}
+
+/* ── MOBILE BOTTOM NAV (hidden on desktop) ── */
+.mobile-nav {
+  display:none;
+  position:fixed; bottom:0; left:0; right:0;
+  background:var(--green);
+  border-top:1px solid rgba(255,255,255,0.15);
+  z-index:100;
+  box-shadow:0 -4px 16px rgba(0,0,0,0.25);
+}
+.mobile-nav-inner {
+  display:flex;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.mobile-nav-inner::-webkit-scrollbar { display:none; }
+.mobile-nav-item {
+  flex:0 0 auto;
+  display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px 12px;
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:all 0.15s;
+  gap:3px;
+  min-width:64px;
+}
+.mobile-nav-item.active { border-bottom-color:var(--amber); }
+.mobile-nav-item .mn-icon { font-size:18px; line-height:1; }
+.mobile-nav-item .mn-label {
+  font-size:9px; font-weight:700; letter-spacing:0.5px;
+  text-transform:uppercase; color:rgba(255,255,255,0.55);
+  white-space:nowrap;
+}
+.mobile-nav-item.active .mn-label { color:var(--amber-lt); }
+.mobile-nav-item .mn-badge {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:8px; font-weight:700;
+  background:rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.5);
+  padding:1px 5px; border-radius:8px;
+  line-height:1.4;
+}
+.mobile-nav-item .mn-badge.ok {
+  background:rgba(82,183,136,0.3);
+  color:#74C69D;
+}
+
+/* ── JSON DRAWER (mobile) ── */
+.json-drawer-overlay {
+  display:block;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:200;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.25s;
+}
+.json-drawer-overlay.open { opacity:1; pointer-events:auto; }
+.json-drawer {
+  position:fixed; bottom:0; left:0; right:0;
+  height:70vh;
+  background:var(--ink);
+  border-radius:16px 16px 0 0;
+  display:flex; flex-direction:column;
+  transform:translateY(100%);
+  pointer-events:none;
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  z-index:201;
+}
+.json-drawer.open { transform:translateY(0); pointer-events:auto; }
+.json-drawer-handle {
+  width:40px; height:4px;
+  background:rgba(255,255,255,0.2);
+  border-radius:2px;
+  margin:12px auto 0;
+  flex-shrink:0;
+}
+.json-drawer-header {
+  padding:12px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  display:flex; align-items:center; gap:8px;
+  flex-shrink:0;
+}
+.json-drawer-title {
+  font-size:11px; font-weight:700; letter-spacing:2px;
+  text-transform:uppercase; color:rgba(255,255,255,0.5); flex:1;
+}
+.json-drawer-close {
+  background:none; border:none; cursor:pointer;
+  color:rgba(255,255,255,0.4); font-size:18px; padding:2px 6px;
+}
+.json-drawer-path {
+  padding:6px 16px;
+  background:rgba(255,255,255,0.04);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px; color:rgba(255,255,255,0.3);
+  flex-shrink:0;
+}
+.json-drawer-body {
+  flex:1; overflow-y:auto;
+  padding:12px 16px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px; line-height:1.7;
+  color:#ABB2BF; white-space:pre;
+}
+.json-drawer-body::-webkit-scrollbar { width:3px; }
+.json-drawer-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); }
+
+/* ── RESPONSIVE BREAKPOINTS ── */
+@media (max-width: 900px) {
+  /* Hide desktop 3-column layout */
+  .app { grid-template-columns:1fr; }
+  .sidebar { display:none; }
+  .json-panel { display:none; }
+
+  /* Show mobile elements */
+  .mobile-header { display:flex; }
+  .mobile-nav { display:block; }
+
+  /* Main content adjustments */
+  .main {
+    padding:16px 16px 100px; /* bottom padding for nav bar */
+    overflow-y:visible;
+  }
+
+  /* Stack all grids to single column */
+  .form-grid,
+  .form-grid-3,
+  .kpi-grid { grid-template-columns:1fr; gap:12px; }
+
+  /* Outcomes: stack instead of 3 columns */
+  .outcomes-grid { grid-template-columns:1fr; }
+
+  /* Effects inputs: smaller grid */
+  .outcome-cell > div[style*="flex-wrap"] {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+  }
+
+  /* Cards: reduce padding */
+  .card { padding:14px; }
+  .event-body { padding:12px; }
+  .choice-block { padding:12px; }
+
+  /* Panel header */
+  .panel-header { margin-bottom:20px; padding-bottom:12px; }
+  .panel-header h2 { font-size:1.25rem; }
+
+  /* Dice row: allow wrap */
+  .dice-row { flex-wrap:wrap; gap:8px; }
+  .dice-label { width:100%; }
+
+  /* KPI items: horizontal layout on mobile */
+  .kpi-item { padding:14px; }
+  .kpi-header { margin-bottom:8px; }
+
+  /* Section sep */
+  .section-sep { margin:18px 0 10px; }
+
+  /* Touch targets — bigger inputs */
+  input[type=text], input[type=number], select, textarea {
+    font-size:16px; /* prevents iOS zoom */
+    padding:11px 12px;
+  }
+  input[type=range] { height:28px; }
+
+  /* Add button */
+  .add-btn { padding:14px; font-size:14px; }
+}
+
+@media (max-width: 480px) {
+  .main { padding:12px 12px 100px; }
+  .panel-header h2 { font-size:1.15rem; }
+  .mobile-header { padding:10px 12px; }
+
+  /* On very small screens, outcomes effects use 2 columns */
+  .outcome-cell > div[style*="flex-wrap"] {
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MOBILE HEADER ══ -->
+<header class="mobile-header">
+  <div class="logo-diamond"><span>A</span></div>
+  <div style="flex:1">
+    <div class="hdr-title">Scenario Builder</div>
+    <div class="hdr-sub">HWS · Unity JSON</div>
+  </div>
+  <button class="mobile-json-btn" onclick="openJsonDrawer()">{ } JSON</button>
+  <button class="mobile-dl-btn" onclick="downloadJSON()">⬇</button>
+</header>
+
+<!-- ══ JSON DRAWER (mobile) ══ -->
+<div class="json-drawer-overlay" id="json-drawer-overlay" onclick="closeJsonDrawer()"></div>
+<div class="json-drawer" id="json-drawer">
+  <div class="json-drawer-handle"></div>
+  <div class="json-drawer-header">
+    <span class="json-drawer-title">Live JSON Output</span>
+    <span class="json-valid-badge json-valid" id="json-valid-badge-drawer">✓ Valid</span>
+    <button class="json-drawer-close" onclick="closeJsonDrawer()">✕</button>
+  </div>
+  <div class="json-drawer-path">📁 StreamingAssets / Scenarios / <span id="json-filename-drawer">scenario.json</span></div>
+  <div class="json-drawer-body" id="json-output-drawer"></div>
+</div>
+
+<!-- ══ MOBILE BOTTOM NAV ══ -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <div class="mobile-nav-item active" id="mnav-meta" onclick="showSection('meta',this,true)">
+      <span class="mn-icon">📋</span>
+      <span class="mn-label">Meta</span>
+      <span class="mn-badge ok" id="mbadge-meta">✓</span>
+    </div>
+    <div class="mobile-nav-item" id="mnav-staffing" onclick="showSection('staffing',this,true)">
+      <span class="mn-icon">👥</span>
+      <span class="mn-label">Staff</span>
+      <span class="mn-badge" id="mbadge-staffing">0</span>
+    </div>
+    <div class="mobile-nav-item" id="mnav-kpi" onclick="showSection('kpi',this,true)">
+      <span class="mn-icon">📊</span>
+      <span class="mn-label">KPIs</span>
+      <span class="mn-badge ok" id="mbadge-kpi">✓</span>
+    </div>
+    <div class="mobile-nav-item" id="mnav-events" onclick="showSection('events',this,true)">
+      <span class="mn-icon">⚡</span>
+      <span class="mn-label">Events</span>
+      <span class="mn-badge" id="mbadge-events">0</span>
+    </div>
+    <div class="mobile-nav-item" id="mnav-positions" onclick="showSection('positions',this,true)">
+      <span class="mn-icon">🎮</span>
+      <span class="mn-label">Roles</span>
+      <span class="mn-badge" id="mbadge-positions">0</span>
+    </div>
+    <div class="mobile-nav-item" id="mnav-import" onclick="showSection('import',this,true)">
+      <span class="mn-icon">📂</span>
+      <span class="mn-label">Import</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app">
+
+<!-- ══════════════════════════════════════════
+     LEFT SIDEBAR
+══════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-diamond"><span>A</span></div>
+    <div class="logo-text">
+      <div class="logo-title">Scenario Builder</div>
+      <div class="logo-sub">HWS · Unity JSON</div>
+    </div>
+  </div>
+
+  <div class="nav-section-label">Sections</div>
+
+  <a class="nav-item active" onclick="showSection('meta',this)">
+    <span class="nav-icon">📋</span>
+    Mission Metadata
+    <span class="nav-badge ok" id="badge-meta">✓</span>
+  </a>
+  <a class="nav-item" onclick="showSection('staffing',this)">
+    <span class="nav-icon">👥</span>
+    Staffing & Org
+    <span class="nav-badge" id="badge-staffing">0</span>
+  </a>
+  <a class="nav-item" onclick="showSection('kpi',this)">
+    <span class="nav-icon">📊</span>
+    Starting KPIs
+    <span class="nav-badge ok" id="badge-kpi">✓</span>
+  </a>
+  <a class="nav-item" onclick="showSection('events',this)">
+    <span class="nav-icon">⚡</span>
+    Events
+    <span class="nav-badge" id="badge-events">0</span>
+  </a>
+  <a class="nav-item" onclick="showSection('positions',this)">
+    <span class="nav-icon">🎮</span>
+    Playable Positions
+    <span class="nav-badge" id="badge-positions">0</span>
+  </a>
+
+  <div class="nav-section-label" style="margin-top:8px;">Import</div>
+  <a class="nav-item" onclick="showSection('import',this)">
+    <span class="nav-icon">📂</span>
+    Import JSON
+  </a>
+
+  <div class="sidebar-actions">
+    <button class="btn-download" onclick="downloadJSON()">
+      ⬇ Download JSON
+    </button>
+    <button class="btn-preview" onclick="refreshPreview()">
+      { } Refresh Preview
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- ── SECTION: META ── -->
+  <div class="section-panel active" id="section-meta">
+    <div class="panel-header">
+      <div class="label">Step 1 of 5</div>
+      <h2>Mission Metadata</h2>
+      <p>Core information about the scenario. This becomes the scenario's ID and display name in the Unity game.</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="field-group">
+        <label class="field-label">Scenario ID <span style="color:var(--red)">*</span></label>
+        <input type="text" id="meta-id" placeholder="nordkivu_phase1" oninput="refreshPreview()">
+        <span class="field-hint">Lowercase, no spaces. Used as filename: <code>nordkivu_phase1.json</code></span>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Display Name <span style="color:var(--red)">*</span></label>
+        <input type="text" id="meta-name" placeholder="Nord-Kivu — Emergency Phase" oninput="refreshPreview()">
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field-group">
+        <label class="field-label">Country / Setting</label>
+        <select id="meta-country" onchange="refreshPreview()">
+          <option value="">— Select —</option>
+          <option value="drc_nordkivu">DRC — Nord-Kivu (real)</option>
+          <option value="drc_southkivu">DRC — South Kivu (real)</option>
+          <option value="tavara">Tavara (fictional)</option>
+          <option value="morvalk">Morvalk (fictional)</option>
+          <option value="zelundi">Zelundi (fictional)</option>
+          <option value="khadara">Khadara (fictional)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Mission Scale</label>
+        <select id="meta-scale" onchange="refreshPreview()">
+          <option value="A">Scale A — Emergency (3–8 intl. staff)</option>
+          <option value="B" selected>Scale B — Standard (8–25 intl. staff)</option>
+          <option value="C">Scale C — Large (25–60+ intl. staff)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-grid-3">
+      <div class="field-group">
+        <label class="field-label">Duration (weeks)</label>
+        <input type="number" id="meta-duration" value="26" min="4" max="52" oninput="refreshPreview()">
+        <span class="field-hint">Standard mission = 26 weeks</span>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Difficulty</label>
+        <select id="meta-difficulty" onchange="refreshPreview()">
+          <option value="standard">Standard ★★☆☆</option>
+          <option value="hard">Hard ★★★☆</option>
+          <option value="crisis">Crisis ★★★★</option>
+          <option value="training">Training ★☆☆☆</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Version</label>
+        <input type="text" id="meta-version" value="1.0" oninput="refreshPreview()">
+      </div>
+    </div>
+
+    <div class="form-full">
+      <div class="field-group">
+        <label class="field-label">Scenario Description</label>
+        <textarea id="meta-desc" rows="3" placeholder="Brief description of the mission context, visible on the scenario select screen..." oninput="refreshPreview()"></textarea>
+      </div>
+    </div>
+
+    <div class="form-full">
+      <div class="field-group">
+        <label class="field-label">Briefing Text (shown before mission starts)</label>
+        <textarea id="meta-briefing" rows="4" placeholder="The full player-facing briefing. Describes the humanitarian situation, ARAN's mandate in this mission, and initial context..." oninput="refreshPreview()"></textarea>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field-group">
+        <label class="field-label">Discovery Arc</label>
+        <select id="meta-discovery" onchange="refreshPreview()">
+          <option value="true">Enabled (months 1–3 limited info)</option>
+          <option value="false">Disabled (full info from week 1)</option>
+        </select>
+        <span class="field-hint">Recommended: enabled for Scale B/C</span>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Experience Level</label>
+        <select id="meta-experience" onchange="refreshPreview()">
+          <option value="both">Both (player chooses)</option>
+          <option value="first_mission">First Mission only</option>
+          <option value="experienced">Experienced only</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: STAFFING ── -->
+  <div class="section-panel" id="section-staffing">
+    <div class="panel-header">
+      <div class="label">Step 2 of 5</div>
+      <h2>Staffing &amp; Org Chart</h2>
+      <p>Define which positions are present, their NPC tier, and optional name. Absent roles will create specific gameplay pressure on present roles.</p>
+    </div>
+
+    <div class="field-note">
+      No mission has a full org chart. Define only the positions relevant to this scenario. Every absent position creates gameplay consequences.
+    </div>
+
+    <div class="section-sep">International Staff</div>
+
+    <div id="staffing-list">
+      <!-- populated by JS -->
+    </div>
+
+    <button class="add-btn" onclick="addStaffRow()">
+      + Add Staff Position
+    </button>
+
+    <div class="section-sep">National Staff (collective)</div>
+
+    <div class="form-grid">
+      <div class="field-group">
+        <label class="field-label">Drivers (national staff)</label>
+        <input type="number" id="ns-drivers" value="4" min="0" max="30" oninput="refreshPreview()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Community Health Workers</label>
+        <input type="number" id="ns-chw" value="6" min="0" max="50" oninput="refreshPreview()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Watsan Technicians</label>
+        <input type="number" id="ns-watsan" value="2" min="0" max="20" oninput="refreshPreview()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Other National Staff</label>
+        <input type="number" id="ns-other" value="8" min="0" max="100" oninput="refreshPreview()">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: KPI ── -->
+  <div class="section-panel" id="section-kpi">
+    <div class="panel-header">
+      <div class="label">Step 3 of 5</div>
+      <h2>Starting KPIs</h2>
+      <p>Initial values for all tracked indicators at the start of the mission. These are the baseline the player works from in Week 1.</p>
+    </div>
+
+    <div class="warn-note">
+      These values directly affect difficulty. Low starting budget + low supply = immediate pressure. High security + high acceptance = easier first weeks.
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">💰</span>
+          <span class="kpi-name">Budget</span>
+          <span class="kpi-val-display" id="disp-budget">120 000 €</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-budget" min="20000" max="300000" step="5000" value="120000" oninput="updateKPI('budget')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-budget" style="width:40%"></div></div>
+      </div>
+
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">💊</span>
+          <span class="kpi-name">Medical Supply</span>
+          <span class="kpi-val-display" id="disp-supply">70%</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-supply" min="10" max="100" step="5" value="70" oninput="updateKPI('supply')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-supply" style="width:70%"></div></div>
+      </div>
+
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">🛡️</span>
+          <span class="kpi-name">Security</span>
+          <span class="kpi-val-display" id="disp-security">55%</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-security" min="0" max="100" step="5" value="55" oninput="updateKPI('security')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-security" style="width:55%"></div></div>
+      </div>
+
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">🤝</span>
+          <span class="kpi-name">Acceptance</span>
+          <span class="kpi-val-display" id="disp-acceptance">60%</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-acceptance" min="0" max="100" step="5" value="60" oninput="updateKPI('acceptance')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-acceptance" style="width:60%"></div></div>
+      </div>
+
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">💪</span>
+          <span class="kpi-name">Team Morale</span>
+          <span class="kpi-val-display" id="disp-morale">75%</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-morale" min="10" max="100" step="5" value="75" oninput="updateKPI('morale')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-morale" style="width:75%"></div></div>
+      </div>
+
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">⛽</span>
+          <span class="kpi-name">Fuel Reserve</span>
+          <span class="kpi-val-display" id="disp-fuel">80%</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-fuel" min="10" max="100" step="5" value="80" oninput="updateKPI('fuel')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-fuel" style="width:80%"></div></div>
+      </div>
+
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">💧</span>
+          <span class="kpi-name">Water Reserve</span>
+          <span class="kpi-val-display" id="disp-water">65%</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-water" min="0" max="100" step="5" value="65" oninput="updateKPI('water')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-water" style="width:65%"></div></div>
+      </div>
+
+      <div class="kpi-item">
+        <div class="kpi-header">
+          <span class="kpi-icon">🧪</span>
+          <span class="kpi-name">Chlorine Stock</span>
+          <span class="kpi-val-display" id="disp-chlorine">70%</span>
+        </div>
+        <div class="range-row">
+          <input type="range" id="kpi-chlorine" min="0" max="100" step="5" value="70" oninput="updateKPI('chlorine')">
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-chlorine" style="width:70%"></div></div>
+      </div>
+    </div>
+
+    <div class="section-sep">Lose Conditions</div>
+    <div class="field-note">Define the thresholds that trigger game over. Leave at 0 to disable that lose condition.</div>
+
+    <div class="form-grid-3">
+      <div class="field-group">
+        <label class="field-label">Budget Lose (€)</label>
+        <input type="number" id="lose-budget" value="0" step="1000" oninput="refreshPreview()">
+        <span class="field-hint">Game over if budget falls below this</span>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Security Lose (%)</label>
+        <input type="number" id="lose-security" value="10" min="0" max="30" oninput="refreshPreview()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Acceptance Lose (%)</label>
+        <input type="number" id="lose-acceptance" value="10" min="0" max="30" oninput="refreshPreview()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Morale Lose (%)</label>
+        <input type="number" id="lose-morale" value="10" min="0" max="30" oninput="refreshPreview()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">CFR Lose (%)</label>
+        <input type="number" id="lose-cfr" value="3" min="0" max="10" oninput="refreshPreview()">
+        <span class="field-hint">Sphere standard: &gt;3% = crisis</span>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Water Reserve Lose (%)</label>
+        <input type="number" id="lose-water" value="5" min="0" max="20" oninput="refreshPreview()">
+        <span class="field-hint">0 days reserve = epidemic risk</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: EVENTS ── -->
+  <div class="section-panel" id="section-events">
+    <div class="panel-header">
+      <div class="label">Step 4 of 5</div>
+      <h2>Events</h2>
+      <p>Define the events that can fire during the mission. Each event has a title, type, description, 3 choices, and 3 outcome levels per choice (immediate, medium-term, long-term).</p>
+    </div>
+
+    <div class="field-note">
+      Each event needs at least 3 choices. Each choice needs 3 outcome descriptions and optional KPI effects. Dice weights (success / partial / fail) must sum to 100.
+    </div>
+
+    <div id="events-list">
+      <!-- populated by JS -->
+    </div>
+
+    <button class="add-btn" onclick="addEvent()">+ Add Event</button>
+  </div>
+
+  <!-- ── SECTION: POSITIONS ── -->
+  <div class="section-panel" id="section-positions">
+    <div class="panel-header">
+      <div class="label">Step 5 of 5</div>
+      <h2>Playable Positions</h2>
+      <p>Which positions can the player choose for this scenario? Each position gets starting stat modifiers and a unique opening briefing.</p>
+    </div>
+
+    <div class="field-note">
+      Only include positions that are actually on this mission (from your Staffing section). A position can only be playable if it's Tier 1 in staffing.
+    </div>
+
+    <div id="positions-list"></div>
+    <button class="add-btn" onclick="addPosition()">+ Add Playable Position</button>
+  </div>
+
+  <!-- ── SECTION: IMPORT ── -->
+  <div class="section-panel" id="section-import">
+    <div class="panel-header">
+      <div class="label">Import</div>
+      <h2>Import Existing JSON</h2>
+      <p>Load a previously exported scenario JSON to continue editing it.</p>
+    </div>
+
+    <div class="import-zone" onclick="document.getElementById('file-input').click()">
+      <div class="icon">📂</div>
+      <p><strong>Click to select a JSON file</strong><br>or drag and drop here</p>
+    </div>
+    <input type="file" id="file-input" accept=".json" style="display:none" onchange="importJSON(this)">
+
+    <div class="warn-note">Importing will overwrite all current data in the builder.</div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════
+     RIGHT PANEL — JSON PREVIEW
+══════════════════════════════════════════ -->
+<aside class="json-panel">
+  <div class="json-panel-header">
+    <span class="json-panel-title">Live JSON Output</span>
+    <span class="json-valid-badge json-valid" id="json-valid-badge">✓ Valid</span>
+  </div>
+  <div class="json-path">
+    📁 Assets / StreamingAssets / Scenarios / <span id="json-filename">scenario.json</span>
+  </div>
+  <div class="json-output" id="json-output"></div>
+</aside>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+const POSITION_REGISTRY = [
+  {code:'OC00300', title:'Project Coordinator (FieldCo)', level:13, family:'Operations'},
+  {code:'LC00100', title:'Logistics Coordinator (Log)', level:13, family:'Logistics & Supply'},
+  {code:'MC00600', title:'Project Medical Referent (PMR)', level:12, family:'Medical & Paramedical'},
+  {code:'LM02503', title:'Fleet Manager', level:9, family:'Logistics & Supply'},
+  {code:'LM01900', title:'Logistics Manager', level:9, family:'Logistics & Supply'},
+  {code:'MM01000', title:'Medical Activity Manager (MAM)', level:11, family:'Medical & Paramedical'},
+  {code:'MM01101', title:'Nursing Activity Manager (NAM)', level:10, family:'Medical & Paramedical'},
+  {code:'MM01102', title:'Midwife Activity Manager (MWAM)', level:10, family:'Medical & Paramedical'},
+  {code:'MM01105', title:'Mental Health Activity Manager (MHAM)', level:10, family:'Medical & Paramedical'},
+  {code:'LM02505', title:'Biomed Manager', level:9, family:'Logistics & Supply'},
+  {code:'LM02200', title:'Watsan Manager (EHM)', level:9, family:'Logistics & Supply'},
+  {code:'MM01301', title:'HPCE Manager (HP)', level:10, family:'Medical & Paramedical'},
+  {code:'LM02100', title:'Logistics / Finance / HR Manager', level:9, family:'Logistics & Supply'},
+  {code:'AM00700', title:'Finance / HR Manager', level:9, family:'HR & Finance'},
+  {code:'MM01109', title:'Laboratory Manager', level:10, family:'Medical & Paramedical'},
+  {code:'MM01201', title:'Epidemiology Activity Manager', level:10, family:'Medical & Paramedical'},
+  {code:'MD01400', title:'Medical Doctor', level:9, family:'Medical & Paramedical'},
+  {code:'OC00700', title:'Base Responsible', level:12, family:'Operations'},
+  {code:'CUSTOM',  title:'Custom Position', level:0, family:''},
+];
+
+const TIER_OPTIONS = [
+  {val:'tier1', label:'Tier 1 — Named NPC', cls:'tier-1'},
+  {val:'tier2', label:'Tier 2 — Functional NPC', cls:'tier-2'},
+  {val:'tier3', label:'Tier 3 — Absent/Vacant', cls:'tier-absent'},
+];
+
+const EVENT_TYPES = ['security','fleet','wash','medical','hr','supply','general'];
+const KPI_KEYS = ['budget','supply','security','acceptance','morale','fuel','water','chlorine'];
+const EFFECT_KEYS = ['budget','supply','security','acceptance','morale','fuel','water','chlorine','cfr'];
+
+let staffRows = [];
+let events = [];
+let positions = [];
+let staffCounter = 0;
+let eventCounter = 0;
+let posCounter = 0;
+
+// ── NAVIGATION ──────────────────────────────────────────────────────────────
+function showSection(id, el, isMobile) {
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+
+  // Desktop sidebar active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const desktopItem = document.querySelector(`.nav-item[onclick*="'${id}'"]`);
+  if (desktopItem) desktopItem.classList.add('active');
+
+  // Mobile bottom nav active state
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+  const mobileItem = document.getElementById('mnav-' + id);
+  if (mobileItem) mobileItem.classList.add('active');
+
+  // Scroll to top — desktop uses .main container, mobile uses window
+  if (isMobile) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    const mainEl = document.querySelector('.main');
+    if (mainEl) mainEl.scrollTop = 0;
+  }
+
+  refreshPreview();
+}
+
+// ── KPI UPDATES ──────────────────────────────────────────────────────────────
+function updateKPI(key) {
+  const val = document.getElementById('kpi-' + key).value;
+  const pct = key === 'budget' ? Math.round((val / 300000) * 100) : parseInt(val);
+  document.getElementById('bar-' + key).style.width = pct + '%';
+  if (key === 'budget') {
+    document.getElementById('disp-budget').textContent = parseInt(val).toLocaleString('fr-FR') + ' €';
+  } else {
+    document.getElementById('disp-' + key).textContent = val + '%';
+  }
+  refreshPreview();
+}
+
+// ── STAFF ROWS ──────────────────────────────────────────────────────────────
+function addStaffRow(data={}) {
+  const id = ++staffCounter;
+  staffRows.push(id);
+  const list = document.getElementById('staffing-list');
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = 'staff-' + id;
+  div.innerHTML = `
+    <div class="card-header">
+      <span class="card-icon">👤</span>
+      <span class="card-title">Staff Position #${id}</span>
+      <button class="card-remove" onclick="removeStaff(${id})">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="field-group">
+        <label class="field-label">Position (IRFFG)</label>
+        <select id="staff-pos-${id}" onchange="onStaffPosChange(${id})">
+          ${POSITION_REGISTRY.map(p => `<option value="${p.code}" ${data.code===p.code?'selected':''}>${p.code} — ${p.title}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">NPC Tier</label>
+        <select id="staff-tier-${id}" class="tier-select ${data.tier||'tier-1'}" onchange="onTierChange(${id})">
+          <option value="tier1" ${(!data.tier||data.tier==='tier1')?'selected':''}>Tier 1 — Named NPC</option>
+          <option value="tier2" ${data.tier==='tier2'?'selected':''}>Tier 2 — Functional NPC</option>
+          <option value="tier3" ${data.tier==='tier3'?'selected':''}>Tier 3 — Absent / Vacant</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">NPC Name (Tier 1 only)</label>
+        <input type="text" id="staff-name-${id}" placeholder="Amina Konaté" value="${data.name||''}" oninput="refreshPreview()">
+      </div>
+      <div class="field-group">
+        <label class="field-label">NPC Nationality</label>
+        <input type="text" id="staff-nat-${id}" placeholder="Malian" value="${data.nationality||''}" oninput="refreshPreview()">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Notes (absence reason, personality, key relationship)</label>
+      <input type="text" id="staff-notes-${id}" placeholder="e.g. On R&R from week 8 — Log must cover fleet during absence" value="${data.notes||''}" oninput="refreshPreview()">
+    </div>`;
+  list.appendChild(div);
+  updateBadge('staffing', staffRows.length);
+  refreshPreview();
+}
+
+function removeStaff(id) {
+  document.getElementById('staff-' + id)?.remove();
+  staffRows = staffRows.filter(i => i !== id);
+  updateBadge('staffing', staffRows.length);
+  refreshPreview();
+}
+
+function onTierChange(id) {
+  const sel = document.getElementById('staff-tier-' + id);
+  sel.className = 'tier-select ' + (sel.value === 'tier1' ? 'tier-1' : sel.value === 'tier2' ? 'tier-2' : 'tier-absent');
+  refreshPreview();
+}
+function onStaffPosChange(id) { refreshPreview(); }
+
+// ── EVENTS ──────────────────────────────────────────────────────────────────
+function addEvent(data={}) {
+  const id = ++eventCounter;
+  events.push(id);
+  const list = document.getElementById('events-list');
+  const div = document.createElement('div');
+  div.className = 'event-card';
+  div.id = 'event-' + id;
+
+  const choicesHTML = ['A','B','C'].map((letter, ci) => {
+    const cd = data.choices?.[ci] || {};
+    return `
+    <div class="choice-block">
+      <div class="choice-header">
+        <span class="choice-letter">${letter}</span>
+        <span class="choice-label-text">Choice ${letter}</span>
+      </div>
+      <div class="field-group" style="margin-bottom:10px;">
+        <label class="field-label">Choice Label</label>
+        <input type="text" id="ev${id}-c${ci}-label" placeholder="e.g. Reroute the convoy via Minova" value="${cd.label||''}" oninput="refreshPreview()">
+      </div>
+      <div class="outcomes-grid">
+        <div class="outcome-cell outcome-immediate">
+          <div class="outcome-cell-label">Immediate</div>
+          <textarea id="ev${id}-c${ci}-out0" rows="2" placeholder="What happens this week..." oninput="refreshPreview()">${cd.outcomes?.[0]?.description||''}</textarea>
+          <div class="effects-row" id="eff-row-${id}-${ci}-0"></div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+            ${EFFECT_KEYS.map(k => `
+            <div class="field-group" style="width:80px;">
+              <label class="field-label" style="font-size:8px;">${k}</label>
+              <input type="number" id="ev${id}-c${ci}-eff0-${k}" placeholder="0" style="padding:4px 6px;font-size:11px;" oninput="refreshPreview()">
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="outcome-cell outcome-medium">
+          <div class="outcome-cell-label">Medium-term</div>
+          <textarea id="ev${id}-c${ci}-out1" rows="2" placeholder="Consequence in 2–4 weeks..." oninput="refreshPreview()">${cd.outcomes?.[1]?.description||''}</textarea>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+            ${EFFECT_KEYS.map(k => `
+            <div class="field-group" style="width:80px;">
+              <label class="field-label" style="font-size:8px;">${k}</label>
+              <input type="number" id="ev${id}-c${ci}-eff1-${k}" placeholder="0" style="padding:4px 6px;font-size:11px;" oninput="refreshPreview()">
+            </div>`).join('')}
+          </div>
+        </div>
+        <div class="outcome-cell outcome-longterm">
+          <div class="outcome-cell-label">Long-term</div>
+          <textarea id="ev${id}-c${ci}-out2" rows="2" placeholder="Impact in month 2–3..." oninput="refreshPreview()">${cd.outcomes?.[2]?.description||''}</textarea>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+            ${EFFECT_KEYS.map(k => `
+            <div class="field-group" style="width:80px;">
+              <label class="field-label" style="font-size:8px;">${k}</label>
+              <input type="number" id="ev${id}-c${ci}-eff2-${k}" placeholder="0" style="padding:4px 6px;font-size:11px;" oninput="refreshPreview()">
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="dice-row">
+        <span class="dice-label">🎲 Dice</span>
+        <div class="field-group" style="width:80px;">
+          <label class="field-label" style="font-size:8px;">Success %</label>
+          <input type="number" class="dice-input" id="ev${id}-c${ci}-dice-success" value="${cd.diceWeights?.success||60}" min="0" max="100" oninput="refreshPreview()">
+        </div>
+        <div class="field-group" style="width:80px;">
+          <label class="field-label" style="font-size:8px;">Partial %</label>
+          <input type="number" class="dice-input" id="ev${id}-c${ci}-dice-partial" value="${cd.diceWeights?.partial||30}" min="0" max="100" oninput="refreshPreview()">
+        </div>
+        <div class="field-group" style="width:80px;">
+          <label class="field-label" style="font-size:8px;">Fail %</label>
+          <input type="number" class="dice-input" id="ev${id}-c${ci}-dice-fail" value="${cd.diceWeights?.fail||10}" min="0" max="100" oninput="refreshPreview()">
+        </div>
+        <span style="font-size:10px;color:var(--ink-lt);margin-top:18px;">Must = 100</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  div.innerHTML = `
+    <div class="event-card-header" onclick="toggleEvent(${id})">
+      <span class="event-num">#${id}</span>
+      <span class="event-title-preview" id="ev${id}-title-preview">New Event</span>
+      <span class="event-type-badge type-general" id="ev${id}-type-badge">general</span>
+      <button class="card-remove" onclick="event.stopPropagation();removeEvent(${id})">✕</button>
+      <span class="event-toggle" id="ev${id}-toggle">▼</span>
+    </div>
+    <div class="event-body open" id="ev${id}-body">
+      <div class="form-grid">
+        <div class="field-group">
+          <label class="field-label">Event Title <span style="color:var(--red)">*</span></label>
+          <input type="text" id="ev${id}-title" placeholder="Checkpoint blocked — road to Kiwanja" value="${data.title||''}" oninput="updateEventPreview(${id});refreshPreview()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Event Type</label>
+          <select id="ev${id}-type" onchange="updateEventPreview(${id});refreshPreview()">
+            ${EVENT_TYPES.map(t => `<option value="${t}" ${data.type===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-full">
+        <div class="field-group">
+          <label class="field-label">Situation Description</label>
+          <textarea id="ev${id}-desc" rows="3" placeholder="Full description of the situation the player faces..." oninput="refreshPreview()">${data.description||''}</textarea>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field-group">
+          <label class="field-label">Source Reference (optional)</label>
+          <input type="text" id="ev${id}-ref" placeholder='e.g. "Staying Alive, ICRC — checkpoint protocol"' value="${data.sourceRef||''}" oninput="refreshPreview()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Earliest Week</label>
+          <input type="number" id="ev${id}-week-min" value="${data.weekMin||1}" min="1" max="26" oninput="refreshPreview()">
+          <span class="field-hint">Don't fire before this week</span>
+        </div>
+      </div>
+      <div class="section-sep">Choices &amp; Outcomes</div>
+      ${choicesHTML}
+    </div>`;
+
+  list.appendChild(div);
+  updateBadge('events', events.length);
+  updateEventPreview(id);
+  refreshPreview();
+}
+
+function toggleEvent(id) {
+  const body = document.getElementById('ev' + id + '-body');
+  const toggle = document.getElementById('ev' + id + '-toggle');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  body.style.display = isOpen ? 'none' : 'block';
+  toggle.classList.toggle('open', !isOpen);
+}
+
+function updateEventPreview(id) {
+  const title = document.getElementById('ev' + id + '-title')?.value || 'New Event';
+  const type = document.getElementById('ev' + id + '-type')?.value || 'general';
+  const preview = document.getElementById('ev' + id + '-title-preview');
+  const badge = document.getElementById('ev' + id + '-type-badge');
+  if (preview) preview.textContent = title;
+  if (badge) { badge.textContent = type; badge.className = 'event-type-badge type-' + type; }
+}
+
+function removeEvent(id) {
+  document.getElementById('event-' + id)?.remove();
+  events = events.filter(i => i !== id);
+  updateBadge('events', events.length);
+  refreshPreview();
+}
+
+// ── POSITIONS ──────────────────────────────────────────────────────────────
+function addPosition(data={}) {
+  const id = ++posCounter;
+  positions.push(id);
+  const list = document.getElementById('positions-list');
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = 'pos-' + id;
+  div.innerHTML = `
+    <div class="card-header">
+      <span class="card-icon">🎮</span>
+      <span class="card-title">Playable Position #${id}</span>
+      <button class="card-remove" onclick="removePosition(${id})">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="field-group">
+        <label class="field-label">Position (IRFFG)</label>
+        <select id="pos-code-${id}" onchange="refreshPreview()">
+          ${POSITION_REGISTRY.map(p => `<option value="${p.code}" ${data.code===p.code?'selected':''}>${p.code} — ${p.title}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Difficulty</label>
+        <select id="pos-diff-${id}" onchange="refreshPreview()">
+          <option value="standard" ${data.difficulty==='standard'?'selected':''}>★★☆☆ Standard</option>
+          <option value="hard" ${data.difficulty==='hard'?'selected':''}>★★★☆ Hard</option>
+          <option value="expert" ${data.difficulty==='expert'?'selected':''}>★★★★ Expert</option>
+          <option value="easy" ${data.difficulty==='easy'?'selected':''}>★☆☆☆ Easy</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-full">
+      <label class="field-label">Opening Briefing (position-specific)</label>
+      <textarea id="pos-brief-${id}" rows="3" placeholder="What Amina Konaté says to you in the first week, specific to this position and scenario..." oninput="refreshPreview()">${data.openingBriefing||''}</textarea>
+    </div>
+    <div class="section-sep">Starting Stat Modifiers</div>
+    <div class="field-note" style="margin-bottom:12px;">Adjustments applied ON TOP of the base KPIs for this position. Use negative numbers to start with disadvantages.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+      ${KPI_KEYS.map(k => `
+      <div class="field-group" style="width:110px;">
+        <label class="field-label" style="font-size:8px;">${k}</label>
+        <input type="number" id="pos-mod-${id}-${k}" placeholder="0" style="padding:5px 8px;font-size:12px;" oninput="refreshPreview()">
+      </div>`).join('')}
+    </div>`;
+  list.appendChild(div);
+  updateBadge('positions', positions.length);
+  refreshPreview();
+}
+
+function removePosition(id) {
+  document.getElementById('pos-' + id)?.remove();
+  positions = positions.filter(i => i !== id);
+  updateBadge('positions', positions.length);
+  refreshPreview();
+}
+
+// ── BUILD JSON ──────────────────────────────────────────────────────────────
+function buildJSON() {
+  const id = v('meta-id') || 'unnamed_scenario';
+
+  // Staffing
+  const staff = staffRows.map(sid => {
+    const code = v('staff-pos-' + sid) || '';
+    const reg = POSITION_REGISTRY.find(p => p.code === code) || {};
+    return {
+      code,
+      title: reg.title || '',
+      level: reg.level || 0,
+      family: reg.family || '',
+      npcTier: v('staff-tier-' + sid) || 'tier1',
+      name: v('staff-name-' + sid) || null,
+      nationality: v('staff-nat-' + sid) || null,
+      notes: v('staff-notes-' + sid) || null,
+    };
+  });
+
+  // KPIs
+  const kpis = {};
+  KPI_KEYS.forEach(k => {
+    kpis[k] = k === 'budget' ? parseInt(v('kpi-' + k)||0) : parseInt(v('kpi-' + k)||0);
+  });
+
+  // Lose conditions
+  const loseConditions = {
+    budget:     parseInt(v('lose-budget')||0),
+    security:   parseInt(v('lose-security')||10),
+    acceptance: parseInt(v('lose-acceptance')||10),
+    morale:     parseInt(v('lose-morale')||10),
+    cfr:        parseFloat(v('lose-cfr')||3),
+    water:      parseInt(v('lose-water')||5),
+  };
+
+  // Events
+  const eventsData = events.map(eid => {
+    const choices = ['A','B','C'].map((letter, ci) => {
+      const outcomes = [0,1,2].map(oi => {
+        const effects = {};
+        EFFECT_KEYS.forEach(k => {
+          const val = parseInt(v(`ev${eid}-c${ci}-eff${oi}-${k}`) || '0');
+          if (val !== 0) effects[k] = val;
+        });
+        return {
+          timing: ['immediate','mediumTerm','longTerm'][oi],
+          description: v(`ev${eid}-c${ci}-out${oi}`) || '',
+          effects,
+        };
+      });
+      return {
+        label: v(`ev${eid}-c${ci}-label`) || `Choice ${letter}`,
+        outcomes,
+        diceWeights: {
+          success: parseInt(v(`ev${eid}-c${ci}-dice-success`)||60),
+          partial:  parseInt(v(`ev${eid}-c${ci}-dice-partial`)||30),
+          fail:     parseInt(v(`ev${eid}-c${ci}-dice-fail`)||10),
+        },
+      };
+    });
+    return {
+      id: `ev_${eid}`,
+      type: v('ev' + eid + '-type') || 'general',
+      title: v('ev' + eid + '-title') || '',
+      description: v('ev' + eid + '-desc') || '',
+      sourceRef: v('ev' + eid + '-ref') || null,
+      weekMin: parseInt(v('ev' + eid + '-week-min')||1),
+      choices,
+    };
+  });
+
+  // Positions
+  const positionsData = positions.map(pid => {
+    const code = v('pos-code-' + pid) || '';
+    const reg = POSITION_REGISTRY.find(p => p.code === code) || {};
+    const mods = {};
+    KPI_KEYS.forEach(k => {
+      const val = parseInt(v(`pos-mod-${pid}-${k}`) || '0');
+      if (val !== 0) mods[k] = val;
+    });
+    return {
+      code,
+      title: reg.title || '',
+      level: reg.level || 0,
+      family: reg.family || '',
+      difficulty: v('pos-diff-' + pid) || 'standard',
+      openingBriefing: v('pos-brief-' + pid) || '',
+      startingModifiers: mods,
+    };
+  });
+
+  return {
+    schemaVersion: '1.0',
+    generatedAt: new Date().toISOString(),
+    generatedBy: 'ARAN Scenario Builder',
+    scenario: {
+      id,
+      name: v('meta-name') || id,
+      country: v('meta-country') || '',
+      scale: v('meta-scale') || 'B',
+      durationWeeks: parseInt(v('meta-duration')||26),
+      difficulty: v('meta-difficulty') || 'standard',
+      version: v('meta-version') || '1.0',
+      description: v('meta-desc') || '',
+      briefing: v('meta-briefing') || '',
+      discoveryArc: v('meta-discovery') === 'true',
+      experienceLevel: v('meta-experience') || 'both',
+    },
+    staffing: {
+      internationalStaff: staff,
+      nationalStaff: {
+        drivers:    parseInt(v('ns-drivers')||0),
+        chw:        parseInt(v('ns-chw')||0),
+        watsanTechs:parseInt(v('ns-watsan')||0),
+        other:      parseInt(v('ns-other')||0),
+      },
+    },
+    startingKPIs: kpis,
+    loseConditions,
+    events: eventsData,
+    playablePositions: positionsData,
+  };
+}
+
+// ── PREVIEW ──────────────────────────────────────────────────────────────────
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let cls = 'j-num';
+      if (/^"/.test(m)) cls = /:$/.test(m) ? 'j-key' : 'j-str';
+      else if (/true|false/.test(m)) cls = 'j-bool';
+      else if (/null/.test(m)) cls = 'j-null';
+      return `<span class="${cls}">${m}</span>`;
+    });
+}
+
+function refreshPreview() {
+  try {
+    const data = buildJSON();
+    const id = data.scenario.id || 'scenario';
+    const filename = id + '.json';
+    const json = JSON.stringify(data, null, 2);
+    const highlighted = syntaxHighlight(json);
+    // Desktop
+    const dOut = document.getElementById('json-output');
+    if (dOut) dOut.innerHTML = highlighted;
+    const dFile = document.getElementById('json-filename');
+    if (dFile) dFile.textContent = filename;
+    const dBadge = document.getElementById('json-valid-badge');
+    if (dBadge) { dBadge.textContent = '✓ Valid'; dBadge.className = 'json-valid-badge json-valid'; }
+    // Mobile drawer
+    const mOut = document.getElementById('json-output-drawer');
+    if (mOut) mOut.innerHTML = highlighted;
+    const mFile = document.getElementById('json-filename-drawer');
+    if (mFile) mFile.textContent = filename;
+    const mBadge = document.getElementById('json-valid-badge-drawer');
+    if (mBadge) { mBadge.textContent = '✓ Valid'; mBadge.className = 'json-valid-badge json-valid'; }
+  } catch(e) {
+    const msg = 'Error: ' + e.message;
+    ['json-output','json-output-drawer'].forEach(i => { const el = document.getElementById(i); if(el) el.textContent = msg; });
+    ['json-valid-badge','json-valid-badge-drawer'].forEach(i => { const el = document.getElementById(i); if(el) { el.textContent = '✗ Error'; el.className = 'json-valid-badge json-invalid'; } });
+  }
+}
+
+// ── JSON DRAWER (mobile) ──────────────────────────────────────────────────────
+function openJsonDrawer() {
+  refreshPreview();
+  document.getElementById('json-drawer-overlay').classList.add('open');
+  document.getElementById('json-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeJsonDrawer() {
+  document.getElementById('json-drawer-overlay').classList.remove('open');
+  document.getElementById('json-drawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── DOWNLOAD ──────────────────────────────────────────────────────────────────
+function downloadJSON() {
+  try {
+    const data = buildJSON();
+    if (!data.scenario.id || data.scenario.id === 'unnamed_scenario') {
+      showToast('⚠ Set a Scenario ID first');
+      showSection('meta', null, false);
+      return;
+    }
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = data.scenario.id + '.json';
+    a.click();
+    showToast('✓ Downloaded: ' + data.scenario.id + '.json');
+  } catch(e) {
+    showToast('✗ Error: ' + e.message);
+  }
+}
+
+// ── IMPORT ──────────────────────────────────────────────────────────────────
+function importJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      loadFromJSON(data);
+      showToast('✓ Loaded: ' + (data.scenario?.name || file.name));
+    } catch(err) {
+      showToast('✗ Invalid JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function loadFromJSON(data) {
+  const sc = data.scenario || {};
+  setV('meta-id', sc.id||'');
+  setV('meta-name', sc.name||'');
+  setV('meta-country', sc.country||'');
+  setV('meta-scale', sc.scale||'B');
+  setV('meta-duration', sc.durationWeeks||26);
+  setV('meta-difficulty', sc.difficulty||'standard');
+  setV('meta-version', sc.version||'1.0');
+  setV('meta-desc', sc.description||'');
+  setV('meta-briefing', sc.briefing||'');
+  setV('meta-discovery', sc.discoveryArc ? 'true' : 'false');
+  setV('meta-experience', sc.experienceLevel||'both');
+
+  // KPIs
+  const kpis = data.startingKPIs || {};
+  KPI_KEYS.forEach(k => { if (kpis[k] !== undefined) { setV('kpi-'+k, kpis[k]); updateKPI(k); } });
+
+  // Lose conditions
+  const lose = data.loseConditions || {};
+  ['budget','security','acceptance','morale','cfr','water'].forEach(k => {
+    if (lose[k] !== undefined) setV('lose-'+k, lose[k]);
+  });
+
+  // National staff
+  const ns = data.staffing?.nationalStaff || {};
+  setV('ns-drivers', ns.drivers||0);
+  setV('ns-chw', ns.chw||0);
+  setV('ns-watsan', ns.watsanTechs||0);
+  setV('ns-other', ns.other||0);
+
+  // Clear and rebuild staff
+  document.getElementById('staffing-list').innerHTML = '';
+  staffRows = []; staffCounter = 0;
+  (data.staffing?.internationalStaff || []).forEach(s => addStaffRow(s));
+
+  // Clear and rebuild events
+  document.getElementById('events-list').innerHTML = '';
+  events = []; eventCounter = 0;
+  (data.events || []).forEach(ev => addEvent(ev));
+
+  // Clear and rebuild positions
+  document.getElementById('positions-list').innerHTML = '';
+  positions = []; posCounter = 0;
+  (data.playablePositions || []).forEach(p => addPosition(p));
+
+  refreshPreview();
+}
+
+// ── UTILITIES ──────────────────────────────────────────────────────────────
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+function setV(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+function updateBadge(section, count) {
+  // Desktop sidebar
+  const badge = document.getElementById('badge-' + section);
+  if (badge) { badge.textContent = count > 0 ? count : '0'; badge.className = 'nav-badge' + (count > 0 ? ' ok' : ''); }
+  // Mobile bottom nav
+  const mbadge = document.getElementById('mbadge-' + section);
+  if (mbadge) { mbadge.textContent = count > 0 ? count : '0'; mbadge.className = 'mn-badge' + (count > 0 ? ' ok' : ''); }
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── DRAG & DROP IMPORT ──────────────────────────────────────────────────────
+const importZone = document.querySelector('.import-zone');
+if (importZone) {
+  importZone.addEventListener('dragover', e => { e.preventDefault(); importZone.style.borderColor = 'var(--green-lt)'; });
+  importZone.addEventListener('dragleave', () => { importZone.style.borderColor = ''; });
+  importZone.addEventListener('drop', e => {
+    e.preventDefault();
+    importZone.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try { loadFromJSON(JSON.parse(ev.target.result)); showToast('✓ Loaded: ' + file.name); }
+      catch(err) { showToast('✗ Invalid JSON'); }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// Close drawer on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeJsonDrawer();
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.body.style.overflow = ''; // reset any stuck overflow
+refreshPreview();
+</script>
+</body>
+</html>
